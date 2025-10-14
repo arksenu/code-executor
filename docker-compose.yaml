@@ -1,0 +1,50 @@
+version: '3.9'
+services:
+  api:
+    build:
+      context: ./api
+    image: code-interpreter-api:dev
+    environment:
+      PORT: 8080
+      API_KEYS: dev_123:dev:5:10
+      SIGNING_KEY: local-signing-key
+      SANDBOX_WORKDIR: /sandbox
+      STORAGE_DIR: /data/storage
+      PUBLIC_BASE_URL: http://localhost:8080
+      SECCOMP_PROFILE: /seccomp/default.json
+      APPARMOR_PROFILE: librechat-codeinterpreter
+    ports:
+      - '8080:8080'
+    volumes:
+      - ./seccomp:/seccomp:ro
+      - ./apparmor:/apparmor:ro
+      - sandbox-data:/sandbox
+      - artifact-data:/data/storage
+    depends_on:
+      - runner-python
+      - runner-node
+      - runner-ruby
+      - runner-php
+  runner-python:
+    build: ./runners/python
+    image: code-interpreter-runner-python:dev
+    profiles: ['runners']
+    command: ["sleep", "infinity"]
+  runner-node:
+    build: ./runners/node
+    image: code-interpreter-runner-node:dev
+    profiles: ['runners']
+    command: ["sleep", "infinity"]
+  runner-ruby:
+    build: ./runners/ruby
+    image: code-interpreter-runner-ruby:dev
+    profiles: ['runners']
+    command: ["sleep", "infinity"]
+  runner-php:
+    build: ./runners/php
+    image: code-interpreter-runner-php:dev
+    profiles: ['runners']
+    command: ["sleep", "infinity"]
+volumes:
+  sandbox-data:
+  artifact-data:

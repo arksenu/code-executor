@@ -1,0 +1,254 @@
+openapi: 3.1.0
+info:
+  title: Code Interpreter API
+  version: 0.1.0
+servers:
+  - url: https://api.example.com
+paths:
+  /v1/health:
+    get:
+      summary: Liveness and readiness probe
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+  /v1/files:
+    post:
+      summary: Upload an input file for later runs
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+              required:
+                - file
+      responses:
+        '200':
+          description: Upload accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadedFile'
+        '400':
+          description: Validation error
+  /v1/files/{id}:
+    get:
+      summary: Download an artifact via signed URL
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: payload
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: sig
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: File download
+        '403':
+          description: Signature expired or invalid
+        '404':
+          description: File not found
+  /v1/runs:
+    post:
+      summary: Execute code in a sandbox
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRun'
+      responses:
+        '200':
+          description: Run completed synchronously
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Run'
+        '400':
+          description: Validation error
+        '401':
+          description: Unauthorized
+        '429':
+          description: Rate limited
+  /v1/runs/{id}:
+    get:
+      summary: Fetch a previous run
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Run retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Run'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Run not found
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: token
+  schemas:
+    RunLimits:
+      type: object
+      properties:
+        timeout_ms:
+          type: integer
+          minimum: 1
+          maximum: 10000
+        memory_mb:
+          type: integer
+          minimum: 16
+          maximum: 512
+        cpu_ms:
+          type: integer
+          minimum: 1
+          maximum: 20000
+        max_output_bytes:
+          type: integer
+          minimum: 1
+          maximum: 2097152
+        max_artifact_bytes:
+          type: integer
+          minimum: 0
+          maximum: 20971520
+        max_artifact_files:
+          type: integer
+          minimum: 0
+          maximum: 10
+    CreateRun:
+      type: object
+      required:
+        - language
+        - code
+      properties:
+        language:
+          type: string
+          enum: [python, node, ruby, php]
+        code:
+          type: string
+          maxLength: 204800
+        args:
+          type: array
+          items:
+            type: string
+        files:
+          type: array
+          items:
+            type: object
+            required: [id, path]
+            properties:
+              id:
+                type: string
+              path:
+                type: string
+        limits:
+          allOf:
+            - $ref: '#/components/schemas/RunLimits'
+        env:
+          type: object
+          additionalProperties:
+            type: string
+    RunUsage:
+      type: object
+      properties:
+        wall_ms:
+          type: integer
+        cpu_ms:
+          type: integer
+        max_rss_mb:
+          type: integer
+    Artifact:
+      type: object
+      properties:
+        name:
+          type: string
+        size:
+          type: integer
+        sha256:
+          type: string
+        url:
+          type: string
+          format: uri
+        expires_at:
+          type: string
+          format: date-time
+        content_type:
+          type: string
+    Run:
+      type: object
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+          enum: [succeeded, failed, timeout, oom, killed]
+        exit_code:
+          type: integer
+          nullable: true
+        stdout:
+          type: string
+        stderr:
+          type: string
+        usage:
+          $ref: '#/components/schemas/RunUsage'
+        artifacts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Artifact'
+        limits:
+          $ref: '#/components/schemas/RunLimits'
+        created_at:
+          type: string
+          format: date-time
+        language:
+          type: string
+          enum: [python, node, ruby, php]
+        code_sha256:
+          type: string
+    UploadedFile:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        size:
+          type: integer
+        sha256:
+          type: string
