@@ -2,7 +2,6 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import Boom from '@hapi/boom';
-import { nanoid } from 'nanoid';
 import type { RunArtifact, UploadedFile } from './types.js';
 
 export interface StorageConfig {
@@ -19,14 +18,20 @@ export interface PresignPayload {
 }
 
 export class ArtifactStorage {
-  constructor(private readonly config: StorageConfig) {}
+  constructor(private readonly config: StorageConfig) { }
 
   public ensureBaseDir() {
     fs.mkdirSync(this.config.baseDir, { recursive: true });
   }
 
   public generateFileId(): string {
-    return `file_${nanoid(12)}`;
+    const alphabet = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const bytes = crypto.randomBytes(12);
+    let id = '';
+    for (let i = 0; i < 12; i++) {
+      id += alphabet[bytes[i] % alphabet.length];
+    }
+    return `file_${id}`;
   }
 
   public storeUploadedFile(tempPath: string, originalName: string, contentType: string): UploadedFile {

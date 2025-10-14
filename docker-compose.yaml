@@ -12,14 +12,23 @@ services:
       STORAGE_DIR: /data/storage
       PUBLIC_BASE_URL: http://localhost:8080
       SECCOMP_PROFILE: /seccomp/default.json
-      APPARMOR_PROFILE: librechat-codeinterpreter
+      HOST_SANDBOX_DIR: /Users/dariomazhara/Desktop/rust/code-interpreter/sandbox
+      # APPARMOR_PROFILE disabled on macOS Docker Desktop
+      # APPARMOR_PROFILE: librechat-codeinterpreter
+      RUNNER_IMAGE_PYTHON: code-interpreter-runner-python:dev
+      RUNNER_IMAGE_NODE: code-interpreter-runner-node:dev
+      RUNNER_IMAGE_RUBY: code-interpreter-runner-ruby:dev
+      RUNNER_IMAGE_PHP: code-interpreter-runner-php:dev
+      DISABLE_SANDBOX_SECURITY: '1'
     ports:
       - '8080:8080'
     volumes:
       - ./seccomp:/seccomp:ro
       - ./apparmor:/apparmor:ro
-      - sandbox-data:/sandbox
-      - artifact-data:/data/storage
+      - ./web/admin:/app/web/admin:ro
+      - ./sandbox:/sandbox
+      - ./artifacts:/data/storage
+      - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       - runner-python
       - runner-node
@@ -45,6 +54,3 @@ services:
     image: code-interpreter-runner-php:dev
     profiles: ['runners']
     command: ["sleep", "infinity"]
-volumes:
-  sandbox-data:
-  artifact-data:

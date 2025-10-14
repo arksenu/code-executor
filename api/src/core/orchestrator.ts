@@ -2,7 +2,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import Boom from '@hapi/boom';
-import { nanoid } from 'nanoid';
 import { mergeLimits } from './limits.js';
 import type { RunRequest, RunRecord } from './types.js';
 import { ArtifactStorage } from './storage.js';
@@ -16,6 +15,16 @@ export interface OrchestratorOptions {
   logger: Logger;
 }
 
+function generateId(length: number): string {
+  const alphabet = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const bytes = crypto.randomBytes(length);
+  let id = '';
+  for (let i = 0; i < length; i++) {
+    id += alphabet[bytes[i] % alphabet.length];
+  }
+  return id;
+}
+
 export class Orchestrator {
   constructor(private readonly options: OrchestratorOptions) {
     fs.mkdirSync(this.options.workRoot, { recursive: true });
@@ -25,7 +34,7 @@ export class Orchestrator {
   public async createRun(request: RunRequest, apiKey: string): Promise<RunRecord> {
     this.validateRequest(request);
     const limits = mergeLimits(request.limits);
-    const runId = `run_${nanoid(12)}`;
+    const runId = `run_${generateId(12)}`;
     const workdir = path.join(this.options.workRoot, runId);
     fs.mkdirSync(path.join(workdir, 'inputs'), { recursive: true });
     fs.mkdirSync(path.join(workdir, 'outputs'), { recursive: true });

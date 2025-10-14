@@ -2,7 +2,7 @@ import childProcess from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { once } from 'node:events';
-import { nanoid } from 'nanoid';
+import crypto from 'node:crypto';
 import type { SandboxResult, SandboxRunSpec, SandboxRunner } from './types.js';
 import { Logger } from '../util/logger.js';
 
@@ -20,7 +20,7 @@ export interface DockerRunnerOptions {
 }
 
 export class DockerSandbox implements SandboxRunner {
-  constructor(private readonly options: DockerRunnerOptions, private readonly logger: Logger) {}
+  constructor(private readonly options: DockerRunnerOptions, private readonly logger: Logger) { }
 
   public async run(spec: SandboxRunSpec): Promise<SandboxResult> {
     const image = languageImageMap[spec.language];
@@ -84,9 +84,19 @@ export class DockerSandbox implements SandboxRunner {
   }
 
   private buildDockerArgs(image: string, runDir: string, spec: SandboxRunSpec): string[] {
-    const containerName = `run_${spec.id}_${nanoid(6)}`;
+    const alphabet = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const bytes = crypto.randomBytes(6);
+    let suffix = '';
+    for (let i = 0; i < 6; i++) {
+      suffix += alphabet[bytes[i] % alphabet.length];
+    }
+    const containerName = `run_${spec.id}_${suffix}`;
+    const disableSecurity = process.env.DISABLE_SANDBOX_SECURITY === '1';
+    const hostSandbox = process.env.HOST_SANDBOX_DIR ?? runDir;
+    const hostRunDir = path.join(hostSandbox, path.basename(runDir));
     const args: string[] = [
       'run',
+      '-i',
       '--rm',
       '--name',
       containerName,
@@ -100,15 +110,15 @@ export class DockerSandbox implements SandboxRunner {
       '--memory-swap',
       `${spec.limits.memory_mb}m`,
       '--cap-drop=ALL',
-      '--security-opt',
-      'no-new-privileges:true',
-      '--security-opt',
-      `seccomp=${this.options.seccompProfile}`,
       '--mount',
-      `type=bind,src=${runDir},dst=/work,ro=false,rw`
+      `type=bind,src=${hostRunDir},dst=/work`
     ];
-    if (this.options.appArmorProfile) {
-      args.push('--security-opt', `apparmor=${this.options.appArmorProfile}`);
+    if (!disableSecurity) {
+      args.push('--security-opt', 'no-new-privileges:true');
+      args.push('--security-opt', `seccomp=${this.options.seccompProfile}`);
+      if (this.options.appArmorProfile) {
+        args.push('--security-opt', `apparmor=${this.options.appArmorProfile}`);
+      }
     }
     args.push(image);
     args.push('--');

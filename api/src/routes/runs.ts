@@ -9,7 +9,7 @@ export interface RunRouteDeps {
   orchestrator: Orchestrator;
   runStore: RunStore;
   limiter: TokenBucketLimiter;
-  tokenLimits: Record<string, { rateLimitRps: number; burst: number }>;
+  tokenLimits: Record<string, { rateLimitRps: number; burst: number; label?: string }>;
 }
 
 export function registerRunRoutes(router: Router, deps: RunRouteDeps) {

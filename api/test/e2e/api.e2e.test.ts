@@ -90,7 +90,7 @@ describe('Code Interpreter API', () => {
     app.use(authenticator.middleware());
     registerFileRoutes(app, { storage });
     registerRunRoutes(app, { orchestrator, runStore, limiter, tokenLimits: { [token]: { label: 'dev', rateLimitRps: 5, burst: 5 } } });
-    app.use((err: any, _req, res, _next) => {
+    app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
       if (err.isBoom) {
         res.status(err.output.statusCode).json({ error: err.message });
       } else {

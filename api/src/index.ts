@@ -57,17 +57,18 @@ const orchestrator = new Orchestrator({
 });
 
 const app = express();
+// Serve admin UI without Helmet so inline scripts work
+app.use(express.static(path.join(process.cwd(), 'web', 'admin')));
 app.use(helmet());
 app.use(compression());
 app.use(bodyParser.json({ limit: '1mb' }));
-app.use(express.static(path.join(process.cwd(), 'web', 'admin')));
 
 registerHealthRoutes(app);
 app.use(authenticator.middleware());
 registerFileRoutes(app, { storage });
 registerRunRoutes(app, { orchestrator, runStore, limiter, tokenLimits: apiKeys });
 
-app.use((err: Boom.Boom | Error, _req, res, _next) => {
+app.use((err: Boom.Boom | Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   if (!Boom.isBoom(err)) {
     logger.error('unhandled error', { message: err.message });
     res.status(500).json({ error: 'internal_error' });
