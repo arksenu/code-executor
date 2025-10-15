@@ -32,7 +32,7 @@ An MVP implementation of an isolated code execution service that mirrors the Ope
    make up
    ```
 
-   The API listens on `http://localhost:8080`. A development bearer token `dev_123` is preconfigured.
+   The API listens on `http://localhost:8080`. A development bearer token `dev_123` is preconfigured. The admin UI is served at the root: open `http://localhost:8080/`.
 
 4. **Submit a run**
 
@@ -46,6 +46,8 @@ An MVP implementation of an isolated code execution service that mirrors the Ope
        "limits": {"timeout_ms": 3000}
      }'
    ```
+
+   Language values must be one of: `python`, `node`, `ruby`, `php` (use `node`, not `node.js`).
 
 5. **Tear down**
 
@@ -68,8 +70,10 @@ Key environment variables for the API container:
 | `SECCOMP_PROFILE` | Path to seccomp JSON profile mounted inside the container |
 | `APPARMOR_PROFILE` | Optional AppArmor profile name applied to runner containers |
 | `RUNNER_IMAGE_PYTHON` etc. | Override runner images (defaults to `code-interpreter-runner-*:latest`) |
+| `HOST_SANDBOX_DIR` | Host directory used by the Docker runner for `--mount src=...` (binds the same location as `SANDBOX_WORKDIR` inside the API container) |
+| `DISABLE_SANDBOX_SECURITY` | When set to `1`, omits seccomp/AppArmor and `no-new-privileges` flags (useful on Docker Desktop/macOS) |
 
-The orchestrator launches runner containers via the Docker CLI. The Compose file builds the runner images and exposes them for reuse, but the API executes code by spawning ephemeral containers with `--network=none`, `--read-only`, `--cap-drop=ALL`, `--pids-limit=32`, and the provided seccomp/AppArmor policies.
+The orchestrator launches runner containers via the Docker CLI. The Compose file builds the runner images and exposes them for reuse, but the API executes code by spawning ephemeral containers with `--network=none`, `--read-only`, `--cap-drop=ALL`, `--pids-limit=32`, and the provided seccomp/AppArmor policies. On Docker Desktop/macOS, the default Compose config sets `DISABLE_SANDBOX_SECURITY=1` to relax those flags for compatibility.
 
 ## Threat Model
 
@@ -107,6 +111,48 @@ See [`api/openapi/spec.yaml`](api/openapi/spec.yaml) for the full REST schema.
 - The Docker sandbox adapter uses `docker run` with ephemeral containers; ensure the API container has permission to invoke the Docker daemon or replace the adapter with containerd/nsjail integration.
 - The runner entrypoints enforce output caps and write usage metrics (`usage.json`) consumed by the orchestrator.
 - The static admin page posts directly to the API using the configured bearer token.
+
+### Local development: rebuild/refresh cheatsheet
+
+- API TypeScript edits (`api/src/...`):
+
+  ```bash
+  docker compose --profile runners build api && docker compose --profile runners up -d
+  # or: docker compose up -d --build api
+  ```
+
+- Runner entrypoint edits (`runners/{python|node|ruby|php}/entrypoint.sh`):
+
+  - Single runner:
+    ```bash
+    docker compose --profile runners build runner-node && docker compose --profile runners up -d
+    ```
+  - Build multiple runners at once (example: php + node + ruby):
+    ```bash
+    docker compose --profile runners build runner-php runner-node runner-ruby && docker compose --profile runners up -d
+    ```
+
+- Web UI edits (`web/admin/index.html`): just refresh the browser (bind-mounted).
+
+- Compose/Dockerfile/env changes:
+
+  ```bash
+  docker compose --profile runners up -d --build
+  ```
+
+- Quick restart without rebuild:
+
+  ```bash
+  docker compose restart api
+  ```
+
+- Stop everything:
+
+  ```bash
+  make down
+  # or
+  docker compose down --remove-orphans && docker compose --profile runners down --remove-orphans
+  ```
 
 ## License
 
