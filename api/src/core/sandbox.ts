@@ -91,8 +91,8 @@ export class DockerSandbox implements SandboxRunner {
     }
     const containerName = `run_${spec.id}_${suffix}`;
     const disableSecurity = process.env.DISABLE_SANDBOX_SECURITY === '1';
-    const hostSandbox = process.env.HOST_SANDBOX_DIR ?? runDir;
-    const hostRunDir = path.join(hostSandbox, path.basename(runDir));
+    const hostSandbox = process.env.HOST_SANDBOX_DIR;
+    const hostRunDir = hostSandbox ? path.join(hostSandbox, path.basename(runDir)) : runDir;
     const args: string[] = [
       'run',
       '-i',
