@@ -1,0 +1,56 @@
+version: '3.9'
+services:
+  api:
+    build:
+      context: ./api
+    image: code-interpreter-api:dev
+    environment:
+      PORT: 8080
+      API_KEYS: dev_123:dev:5:10
+      SIGNING_KEY: local-signing-key
+      SANDBOX_WORKDIR: /sandbox
+      STORAGE_DIR: /data/storage
+      PUBLIC_BASE_URL: http://localhost:8080
+      SECCOMP_PROFILE: /seccomp/default.json
+      HOST_SANDBOX_DIR: ${HOST_SANDBOX_DIR:-${PWD}/sandbox}
+      # APPARMOR_PROFILE disabled on macOS Docker Desktop
+      # APPARMOR_PROFILE: codeinterpreter
+      RUNNER_IMAGE_PYTHON: code-interpreter-runner-python:dev
+      RUNNER_IMAGE_NODE: code-interpreter-runner-node:dev
+      RUNNER_IMAGE_RUBY: code-interpreter-runner-ruby:dev
+      RUNNER_IMAGE_PHP: code-interpreter-runner-php:dev
+      DISABLE_SANDBOX_SECURITY: '1'
+    ports:
+      - '8080:8080'
+    volumes:
+      - ./seccomp:/seccomp:ro
+      - ./apparmor:/apparmor:ro
+      - ./web/admin:/app/web/admin:ro
+      - ./sandbox:/sandbox
+      - ./artifacts:/data/storage
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - runner-python
+      - runner-node
+      - runner-ruby
+      - runner-php
+  runner-python:
+    build: ./runners/python
+    image: code-interpreter-runner-python:dev
+    profiles: ['runners']
+    command: ["sleep", "infinity"]
+  runner-node:
+    build: ./runners/node
+    image: code-interpreter-runner-node:dev
+    profiles: ['runners']
+    command: ["sleep", "infinity"]
+  runner-ruby:
+    build: ./runners/ruby
+    image: code-interpreter-runner-ruby:dev
+    profiles: ['runners']
+    command: ["sleep", "infinity"]
+  runner-php:
+    build: ./runners/php
+    image: code-interpreter-runner-php:dev
+    profiles: ['runners']
+    command: ["sleep", "infinity"]

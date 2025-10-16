@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Code Interpreter Admin</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      margin: 2rem;
+      max-width: 960px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 200px;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    pre {
+      background: #111;
+      color: #0f0;
+      padding: 1rem;
+      overflow: auto;
+    }
+
+    .row {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .row>div {
+      flex: 1;
+    }
+
+    button {
+      padding: 0.6rem 1.2rem;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Code Interpreter Admin</h1>
+  <p>Submit a run to the API and view the result.</p>
+  <div>
+    <label>Bearer Token</label>
+    <input id="token" value="dev_123" />
+  </div>
+  <div>
+    <label>Language</label>
+    <select id="language">
+      <option value="python">Python</option>
+      <option value="node">Node.js</option>
+      <option value="ruby">Ruby</option>
+      <option value="php">PHP</option>
+    </select>
+  </div>
+  <div>
+    <label>Code</label>
+    <textarea id="code">print("hello from sandbox")</textarea>
+  </div>
+  <button id="run" type="button">Run</button>
+  <h2>Result</h2>
+  <pre id="result">No run yet.</pre>
+
+  <script>
+    const runBtn = document.getElementById('run');
+    const resultEl = document.getElementById('result');
+    runBtn.addEventListener('click', async () => {
+      try {
+        const token = document.getElementById('token').value;
+        const language = document.getElementById('language').value;
+        const code = document.getElementById('code').value;
+        console.log('Submitting run', { language, codeLen: code.length });
+        resultEl.textContent = 'Submitting...';
+        const response = await fetch('/v1/runs', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ language, code })
+        });
+        const text = await response.text();
+        console.log('Response status', response.status);
+        resultEl.textContent = text;
+      } catch (err) {
+        console.error('Run failed', err);
+        resultEl.textContent = String(err);
+      }
+    });
+  </script>
+</body>
+
+</html>

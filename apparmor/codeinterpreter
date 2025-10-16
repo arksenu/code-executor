@@ -1,0 +1,16 @@
+profile codeinterpreter flags=(attach_disconnected,mediate_deleted) {
+  #include <abstractions/base>
+  deny network,
+  deny capability,
+  file,
+  deny mount,
+  deny ptrace,
+  deny signal,
+  deny unix,
+  /work/** rw,
+  /tmp/** rw,
+  /dev/null rw,
+  /dev/zero rw,
+  /dev/random r,
+  /dev/urandom r,
+}
