@@ -14,7 +14,7 @@ services:
       SECCOMP_PROFILE: /seccomp/default.json
       HOST_SANDBOX_DIR: ${HOST_SANDBOX_DIR:-${PWD}/sandbox}
       # APPARMOR_PROFILE disabled on macOS Docker Desktop
-      # APPARMOR_PROFILE: librechat-codeinterpreter
+      # APPARMOR_PROFILE: codeinterpreter
       RUNNER_IMAGE_PYTHON: code-interpreter-runner-python:dev
       RUNNER_IMAGE_NODE: code-interpreter-runner-node:dev
       RUNNER_IMAGE_RUBY: code-interpreter-runner-ruby:dev
