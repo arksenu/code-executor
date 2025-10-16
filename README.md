@@ -1,4 +1,4 @@
-                                                   # Code Interpreter API
+# Code Interpreter API
 
 An MVP implementation of an isolated code execution service that mirrors the OpenAI Code Interpreter run semantics. The API accepts untrusted code for Python, Node.js, Ruby, and PHP, executes it inside hardened containers, and returns structured results including stdout/stderr streams and signed artifact URLs.
 
