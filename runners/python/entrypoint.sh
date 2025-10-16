@@ -52,10 +52,12 @@ stderr = stderr[: int(LIMITS.get('max_output_bytes', 1024 * 1024))]
 sys.stdout.buffer.write(stdout)
 sys.stderr.buffer.write(stderr)
 
+children_usage = resource.getrusage(resource.RUSAGE_CHILDREN)
+cpu_ms = int((children_usage.ru_utime + children_usage.ru_stime) * 1000)
 usage = {
     'wall_ms': int((end - start) * 1000),
-    'cpu_ms': int((end - start) * 1000),
-    'max_rss_mb': int(resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss / 1024)
+    'cpu_ms': cpu_ms,
+    'max_rss_mb': int(children_usage.ru_maxrss / 1024)
 }
 (Path('usage.json')).write_text(json.dumps(usage))
 

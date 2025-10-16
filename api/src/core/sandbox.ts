@@ -58,8 +58,7 @@ export class DockerSandbox implements SandboxRunner {
     let status: SandboxResult['status'] = 'succeeded';
     if (signal === 'SIGKILL') {
       status = 'timeout';
-    }
-    if (code === 137) {
+    } else if (code === 137) {
       status = 'oom';
     } else if (code !== 0) {
       status = 'failed';
