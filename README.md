@@ -34,6 +34,8 @@ An MVP implementation of an isolated code execution service that mirrors the Ope
 
    The API listens on `http://localhost:8080`. A development bearer token `dev_123` is preconfigured. The admin UI is served at the root: open `http://localhost:8080/`.
 
+<img width="1123" height="895" alt="Screenshot 2025-10-18 at 12 17 11 AM" src="https://github.com/user-attachments/assets/039494e8-270b-4d26-920d-142d5659a360" />
+
 4. **Submit a run**
 
    ```bash
