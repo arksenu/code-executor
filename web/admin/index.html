@@ -8,7 +8,7 @@
     body {
       font-family: system-ui, sans-serif;
       margin: 2rem;
-      max-width: 960px;
+      max-width: 1200px;
     }
 
     textarea {
@@ -28,6 +28,9 @@
       color: #0f0;
       padding: 1rem;
       overflow: auto;
+      border-radius: 6px;
+      border: 1px solid #333;
+      white-space: pre-wrap;
     }
 
     .row {
@@ -42,41 +45,138 @@
     button {
       padding: 0.6rem 1.2rem;
     }
+
+    /* Console styles */
+    .console {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      height: 100%;
+    }
+
+    .console-output {
+      background: #111;
+      color: #eee;
+      padding: 1rem;
+      border: 1px solid #333;
+      border-radius: 6px;
+      height: 320px;
+      overflow: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    .console-line {
+      white-space: pre-wrap;
+    }
+
+    .console-line.input {
+      color: #b3b3b3;
+    }
+
+    .console-line.stdout {
+      color: #e6e6e6;
+    }
+
+    .console-line.stderr {
+      color: #ff6b6b;
+    }
+
+    .console-line.meta {
+      color: #8d8d8d;
+    }
+
+    .console-line.error {
+      color: #ff4d4f;
+    }
+
+    .console-input-row {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    #console-input {
+      flex: 1;
+      padding: 0.5rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      border: 1px solid #bbb;
+      border-radius: 4px;
+    }
   </style>
 </head>
 
 <body>
   <h1>Code Interpreter Admin</h1>
   <p>Submit a run to the API and view the result.</p>
-  <div>
-    <label>Bearer Token</label>
-    <input id="token" value="dev_123" />
+  <div class="row">
+    <div>
+      <div>
+        <label>Bearer Token</label>
+        <input id="token" value="dev_123" />
+      </div>
+      <div>
+        <label>Language</label>
+        <select id="language">
+          <option value="python">Python</option>
+          <option value="node">Node.js</option>
+          <option value="ruby">Ruby</option>
+          <option value="php">PHP</option>
+        </select>
+      </div>
+      <div>
+        <label>Code</label>
+        <textarea id="code">print("hello from sandbox")</textarea>
+      </div>
+      <button id="run" type="button">Run</button>
+    </div>
+    <div>
+      <h2 id="console-title">Console (Python)</h2>
+      <div class="console">
+        <div id="console-output" class="console-output" aria-live="polite"></div>
+        <div class="console-input-row">
+          <input id="console-input" placeholder="Type a command and press Enter" />
+          <button id="console-run" type="button">Execute</button>
+        </div>
+      </div>
+    </div>
   </div>
-  <div>
-    <label>Language</label>
-    <select id="language">
-      <option value="python">Python</option>
-      <option value="node">Node.js</option>
-      <option value="ruby">Ruby</option>
-      <option value="php">PHP</option>
-    </select>
-  </div>
-  <div>
-    <label>Code</label>
-    <textarea id="code">print("hello from sandbox")</textarea>
-  </div>
-  <button id="run" type="button">Run</button>
   <h2>Result</h2>
   <pre id="result">No run yet.</pre>
 
   <script>
+    const tokenEl = document.getElementById('token');
+    const languageEl = document.getElementById('language');
+    const codeEl = document.getElementById('code');
     const runBtn = document.getElementById('run');
     const resultEl = document.getElementById('result');
+    const consoleTitleEl = document.getElementById('console-title');
+    const consoleOutEl = document.getElementById('console-output');
+    const consoleInputEl = document.getElementById('console-input');
+    const consoleRunBtn = document.getElementById('console-run');
+
+    const langNames = { python: 'Python', node: 'Node.js', ruby: 'Ruby', php: 'PHP' };
+
+    function updateConsoleTitle() {
+      const name = langNames[languageEl.value] || languageEl.value;
+      consoleTitleEl.textContent = `Console (${name})`;
+    }
+    languageEl.addEventListener('change', updateConsoleTitle);
+    updateConsoleTitle();
+
+    function tryPretty(text) {
+      try {
+        const obj = JSON.parse(text);
+        return JSON.stringify(obj, null, 2);
+      } catch (_) {
+        return text;
+      }
+    }
+
     runBtn.addEventListener('click', async () => {
       try {
-        const token = document.getElementById('token').value;
-        const language = document.getElementById('language').value;
-        const code = document.getElementById('code').value;
+        const token = tokenEl.value;
+        const language = languageEl.value;
+        const code = codeEl.value;
         console.log('Submitting run', { language, codeLen: code.length });
         resultEl.textContent = 'Submitting...';
         const response = await fetch('/v1/runs', {
@@ -89,10 +189,57 @@
         });
         const text = await response.text();
         console.log('Response status', response.status);
-        resultEl.textContent = text;
+        resultEl.textContent = tryPretty(text);
       } catch (err) {
         console.error('Run failed', err);
         resultEl.textContent = String(err);
+      }
+    });
+
+    function appendConsoleLine(text, cls) {
+      const line = document.createElement('div');
+      line.className = `console-line ${cls || ''}`.trim();
+      line.textContent = text;
+      consoleOutEl.appendChild(line);
+      consoleOutEl.scrollTop = consoleOutEl.scrollHeight;
+    }
+
+    async function executeConsole() {
+      const command = consoleInputEl.value;
+      if (!command || !command.trim()) return;
+      const token = tokenEl.value;
+      const language = languageEl.value;
+      appendConsoleLine(`> ${command}`, 'input');
+      consoleInputEl.value = '';
+      try {
+        const response = await fetch('/v1/runs', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ language, code: command })
+        });
+        const text = await response.text();
+        try {
+          const run = JSON.parse(text);
+          if (run.stdout) appendConsoleLine(String(run.stdout), 'stdout');
+          if (run.stderr) appendConsoleLine(String(run.stderr), 'stderr');
+          const exit = typeof run.exit_code === 'number' ? run.exit_code : (run.exit_code || 0);
+          appendConsoleLine(`exit ${exit}`, 'meta');
+        } catch (_) {
+          appendConsoleLine(text, 'stdout');
+        }
+      } catch (err) {
+        appendConsoleLine(String(err), 'error');
+      }
+    }
+
+    consoleRunBtn.addEventListener('click', executeConsole);
+    consoleInputEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        executeConsole();
       }
     });
   </script>
