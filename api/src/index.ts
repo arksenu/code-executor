@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import bodyParser from 'body-parser';
 import Boom from '@hapi/boom';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { Logger } from './util/logger.js';
 import { ArtifactStorage } from './core/storage.js';
 import { Authenticator } from './core/auth.js';
@@ -58,13 +59,40 @@ const orchestrator = new Orchestrator({
 
 const app = express();
 // Serve admin UI without Helmet so inline scripts work
-app.use(express.static(path.join(process.cwd(), 'web', 'admin')));
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Determine admin UI directory with multiple fallback strategies
+let adminDir: string;
+if (process.env.ADMIN_UI_PATH) {
+  // Use explicit environment variable if set
+  adminDir = process.env.ADMIN_UI_PATH;
+} else {
+  // Try to intelligently find the admin UI directory
+  // Check if we're in a Docker container (where workdir is /app)
+  if (__dirname.startsWith('/app/')) {
+    // In Docker: /app/dist → /app/web/admin
+    adminDir = path.join('/app', 'web', 'admin');
+  } else {
+    // In local development or other environments
+    // From api/src/ or api/dist/ → go up 2 levels to project root
+    const projectRoot = path.join(__dirname, '..', '..');
+    adminDir = path.join(projectRoot, 'web', 'admin');
+  }
+}
+
+logger.info('Serving admin UI', { adminDir });
+app.use(express.static(adminDir));
+// Explicit index fallback (handles cases where static middleware is bypassed)
+app.get('/', (_req, res) => {
+  res.sendFile(path.join(adminDir, 'index.html'));
+});
 app.use(helmet());
 app.use(compression());
 app.use(bodyParser.json({ limit: '1mb' }));
 
 registerHealthRoutes(app);
-app.use(authenticator.middleware());
+// Apply auth only to API routes, not to static assets
+app.use('/v1', authenticator.middleware());
 registerFileRoutes(app, { storage });
 registerRunRoutes(app, { orchestrator, runStore, limiter, tokenLimits: apiKeys });
 
