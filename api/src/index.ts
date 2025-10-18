@@ -60,9 +60,27 @@ const orchestrator = new Orchestrator({
 const app = express();
 // Serve admin UI without Helmet so inline scripts work
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-// dist/<files> → project root is one level up
-const projectRoot = path.join(__dirname, '..');
-const adminDir = path.join(projectRoot, 'web', 'admin');
+
+// Determine admin UI directory with multiple fallback strategies
+let adminDir: string;
+if (process.env.ADMIN_UI_PATH) {
+  // Use explicit environment variable if set
+  adminDir = process.env.ADMIN_UI_PATH;
+} else {
+  // Try to intelligently find the admin UI directory
+  // Check if we're in a Docker container (where workdir is /app)
+  if (__dirname.startsWith('/app/')) {
+    // In Docker: /app/dist → /app/web/admin
+    adminDir = path.join('/app', 'web', 'admin');
+  } else {
+    // In local development or other environments
+    // From api/src/ or api/dist/ → go up 2 levels to project root
+    const projectRoot = path.join(__dirname, '..', '..');
+    adminDir = path.join(projectRoot, 'web', 'admin');
+  }
+}
+
+logger.info('Serving admin UI', { adminDir });
 app.use(express.static(adminDir));
 // Explicit index fallback (handles cases where static middleware is bypassed)
 app.get('/', (_req, res) => {
