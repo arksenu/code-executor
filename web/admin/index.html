@@ -3,145 +3,449 @@
 
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Code Interpreter Admin</title>
   <style>
-    body {
-      font-family: system-ui, sans-serif;
-      margin: 2rem;
-      max-width: 1200px;
+    :root {
+      --bg-primary: #0a0e1a;
+      --bg-secondary: #151b2d;
+      --bg-tertiary: #1a2236;
+      --bg-accent: #242d47;
+      --text-primary: #e2e8f0;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent-primary: #3b82f6;
+      --accent-hover: #2563eb;
+      --accent-active: #1d4ed8;
+      --success: #10b981;
+      --error: #ef4444;
+      --warning: #f59e0b;
+      --border: #2a3349;
+      --console-bg: #0d1117;
+      --console-border: #30363d;
     }
 
-    textarea {
-      width: 100%;
-      height: 200px;
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .header {
+      margin-bottom: 2rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-primary) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .header p {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+    }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .card {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      padding: 1.5rem;
+      border: 1px solid var(--border);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      color: var(--text-primary);
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
     input,
-    select {
+    select,
+    textarea {
       width: 100%;
-      padding: 0.5rem;
-      margin-bottom: 1rem;
+      padding: 0.75rem 1rem;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: 0.95rem;
+      transition: all 0.3s ease;
+      font-family: inherit;
     }
 
-    pre {
-      background: #111;
-      color: #0f0;
-      padding: 1rem;
-      overflow: auto;
-      border-radius: 6px;
-      border: 1px solid #333;
-      white-space: pre-wrap;
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--accent-primary);
+      background: var(--bg-accent);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     }
 
-    .row {
-      display: flex;
-      gap: 1rem;
+    textarea {
+      resize: vertical;
+      min-height: 200px;
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+      font-size: 0.9rem;
+      line-height: 1.5;
     }
 
-    .row>div {
-      flex: 1;
+    select {
+      cursor: pointer;
     }
 
-    button {
+    .btn {
+      padding: 0.75rem 2rem;
+      background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-hover) 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn.btn-secondary {
+      background: var(--bg-accent);
+      box-shadow: none;
       padding: 0.6rem 1.2rem;
+      font-size: 0.9rem;
     }
 
-    /* Console styles */
-    .console {
+    .btn.btn-secondary:hover {
+      background: var(--border);
+    }
+
+    /* Console Styles */
+    .console-container {
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
       height: 100%;
     }
 
+    .console-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+
+    .console-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .console-badge {
+      padding: 0.25rem 0.75rem;
+      background: var(--bg-accent);
+      border-radius: 20px;
+      font-size: 0.8rem;
+      color: var(--success);
+      border: 1px solid var(--success);
+    }
+
     .console-output {
-      background: #111;
-      color: #eee;
+      background: var(--console-bg);
+      border: 1px solid var(--console-border);
+      border-radius: 8px;
       padding: 1rem;
-      border: 1px solid #333;
-      border-radius: 6px;
-      height: 320px;
-      overflow: auto;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      height: 400px;
+      overflow-y: auto;
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      margin-bottom: 1rem;
     }
 
     .console-line {
+      margin: 0.25rem 0;
       white-space: pre-wrap;
+      word-wrap: break-word;
     }
 
     .console-line.input {
-      color: #b3b3b3;
+      color: var(--text-muted);
+    }
+
+    .console-line.input::before {
+      content: "$ ";
+      color: var(--accent-primary);
+      font-weight: bold;
     }
 
     .console-line.stdout {
-      color: #e6e6e6;
+      color: var(--text-primary);
     }
 
     .console-line.stderr {
-      color: #ff6b6b;
+      color: var(--error);
     }
 
     .console-line.meta {
-      color: #8d8d8d;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      opacity: 0.7;
     }
 
     .console-line.error {
-      color: #ff4d4f;
-    }
-
-    .console-input-row {
-      display: flex;
-      gap: 0.5rem;
-      align-items: center;
-    }
-
-    #console-input {
-      flex: 1;
-      padding: 0.5rem;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      border: 1px solid #bbb;
+      color: var(--error);
+      background: rgba(239, 68, 68, 0.1);
+      padding: 0.25rem 0.5rem;
       border-radius: 4px;
+      margin: 0.5rem 0;
+    }
+
+    .console-input-group {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    .console-input {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
+    }
+
+    .console-input:focus {
+      outline: none;
+      border-color: var(--accent-primary);
+      background: var(--bg-accent);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    /* Result Section */
+    .result-section {
+      margin-top: 2rem;
+    }
+
+    .result-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+
+    .result-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .result-status {
+      padding: 0.25rem 0.75rem;
+      background: var(--bg-accent);
+      border-radius: 20px;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    .result-content {
+      background: var(--console-bg);
+      border: 1px solid var(--console-border);
+      border-radius: 8px;
+      padding: 1.5rem;
+      min-height: 150px;
+      max-height: 500px;
+      overflow: auto;
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      color: var(--success);
+      white-space: pre-wrap;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Scrollbar Styles */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg-tertiary);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--accent-primary);
+    }
+
+    /* Loading Animation */
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    .loading {
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1024px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .console-output {
+        height: 300px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 1rem;
+      }
+
+      .header h1 {
+        font-size: 1.5rem;
+      }
+
+      .card {
+        padding: 1rem;
+      }
     }
   </style>
 </head>
 
 <body>
-  <h1>Code Interpreter Admin</h1>
-  <p>Submit a run to the API and view the result.</p>
-  <div class="row">
-    <div>
-      <div>
-        <label>Bearer Token</label>
-        <input id="token" value="dev_123" />
-      </div>
-      <div>
-        <label>Language</label>
-        <select id="language">
-          <option value="python">Python</option>
-          <option value="node">Node.js</option>
-          <option value="ruby">Ruby</option>
-          <option value="php">PHP</option>
-        </select>
-      </div>
-      <div>
-        <label>Code</label>
-        <textarea id="code">print("hello from sandbox")</textarea>
-      </div>
-      <button id="run" type="button">Run</button>
+  <div class="container">
+    <div class="header">
+      <h1>Code Interpreter Admin</h1>
+      <p>Execute code in isolated sandboxes with real-time output streaming</p>
     </div>
-    <div>
-      <h2 id="console-title">Console (Python)</h2>
-      <div class="console">
-        <div id="console-output" class="console-output" aria-live="polite"></div>
-        <div class="console-input-row">
-          <input id="console-input" placeholder="Type a command and press Enter" />
-          <button id="console-run" type="button">Execute</button>
+
+    <div class="main-grid">
+      <!-- Left Panel: Code Editor -->
+      <div class="card">
+        <h2 class="card-title">Code Editor</h2>
+
+        <div class="form-group">
+          <label for="token">API Authentication</label>
+          <input id="token" type="text" value="dev_123" placeholder="Enter your bearer token" />
+        </div>
+
+        <div class="form-group">
+          <label for="language">Runtime Environment</label>
+          <select id="language">
+            <option value="python">Python 3.x</option>
+            <option value="node">Node.js 20</option>
+            <option value="ruby">Ruby 3.x</option>
+            <option value="php">PHP 8.x</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="code">Source Code</label>
+          <textarea id="code" placeholder="Enter your code here...">print("hello from sandbox")</textarea>
+        </div>
+
+        <button id="run" class="btn" type="button">Execute Code</button>
+      </div>
+
+      <!-- Right Panel: Interactive Console -->
+      <div class="card">
+        <div class="console-container">
+          <div class="console-header">
+            <h2 class="console-title" id="console-title">Interactive Console</h2>
+            <span class="console-badge">Live</span>
+          </div>
+
+          <div id="console-output" class="console-output" aria-live="polite">
+            <div class="console-line meta">Waiting for commands...</div>
+          </div>
+
+          <div class="console-input-group">
+            <input id="console-input" class="console-input" placeholder="Type a command and press Enter..."
+              autocomplete="off" />
+            <button id="console-run" class="btn btn-secondary" type="button">Run</button>
+          </div>
         </div>
       </div>
     </div>
+
+    <!-- Result Section -->
+    <div class="result-section">
+      <div class="result-header">
+        <h2 class="result-title">Execution Result</h2>
+        <span class="result-status" id="result-status">Ready</span>
+      </div>
+      <pre id="result" class="result-content">No execution yet. Click "Execute Code" to run your script.</pre>
+    </div>
   </div>
-  <h2>Result</h2>
-  <pre id="result">No run yet.</pre>
 
   <script>
     const tokenEl = document.getElementById('token');
@@ -149,19 +453,34 @@
     const codeEl = document.getElementById('code');
     const runBtn = document.getElementById('run');
     const resultEl = document.getElementById('result');
+    const resultStatusEl = document.getElementById('result-status');
     const consoleTitleEl = document.getElementById('console-title');
     const consoleOutEl = document.getElementById('console-output');
     const consoleInputEl = document.getElementById('console-input');
     const consoleRunBtn = document.getElementById('console-run');
 
-    const langNames = { python: 'Python', node: 'Node.js', ruby: 'Ruby', php: 'PHP' };
+    const langNames = {
+      python: 'Python',
+      node: 'Node.js',
+      ruby: 'Ruby',
+      php: 'PHP'
+    };
 
     function updateConsoleTitle() {
       const name = langNames[languageEl.value] || languageEl.value;
-      consoleTitleEl.textContent = `Console (${name})`;
+      consoleTitleEl.textContent = `Interactive Console - ${name}`;
     }
-    languageEl.addEventListener('change', updateConsoleTitle);
+
+    languageEl.addEventListener('change', () => {
+      updateConsoleTitle();
+      clearConsole();
+    });
+
     updateConsoleTitle();
+
+    function clearConsole() {
+      consoleOutEl.innerHTML = '<div class="console-line meta">Console cleared. Ready for new session.</div>';
+    }
 
     function tryPretty(text) {
       try {
@@ -172,13 +491,30 @@
       }
     }
 
+    function setResultStatus(status, type = 'default') {
+      resultStatusEl.textContent = status;
+      resultStatusEl.style.color = type === 'error' ? 'var(--error)' :
+        type === 'success' ? 'var(--success)' :
+          'var(--text-secondary)';
+    }
+
     runBtn.addEventListener('click', async () => {
       try {
         const token = tokenEl.value;
         const language = languageEl.value;
         const code = codeEl.value;
+
+        if (!code.trim()) {
+          setResultStatus('No code provided', 'error');
+          resultEl.textContent = 'Please enter some code to execute.';
+          return;
+        }
+
         console.log('Submitting run', { language, codeLen: code.length });
-        resultEl.textContent = 'Submitting...';
+        setResultStatus('Executing...', 'default');
+        resultEl.textContent = 'Submitting code for execution...';
+        resultEl.classList.add('loading');
+
         const response = await fetch('/v1/runs', {
           method: 'POST',
           headers: {
@@ -187,19 +523,42 @@
           },
           body: JSON.stringify({ language, code })
         });
+
         const text = await response.text();
         console.log('Response status', response.status);
-        resultEl.textContent = tryPretty(text);
+
+        resultEl.classList.remove('loading');
+
+        if (response.ok) {
+          setResultStatus('Success', 'success');
+          resultEl.textContent = tryPretty(text);
+        } else {
+          setResultStatus('Error', 'error');
+          resultEl.textContent = tryPretty(text);
+        }
       } catch (err) {
         console.error('Run failed', err);
+        resultEl.classList.remove('loading');
+        setResultStatus('Connection Error', 'error');
         resultEl.textContent = String(err);
       }
     });
 
     function appendConsoleLine(text, cls) {
+      // Clear initial message if present
+      if (consoleOutEl.querySelector('.console-line.meta')?.textContent.includes('Waiting for commands')) {
+        consoleOutEl.innerHTML = '';
+      }
+
       const line = document.createElement('div');
       line.className = `console-line ${cls || ''}`.trim();
-      line.textContent = text;
+
+      if (cls === 'input') {
+        line.textContent = text.replace(/^> /, '');
+      } else {
+        line.textContent = text;
+      }
+
       consoleOutEl.appendChild(line);
       consoleOutEl.scrollTop = consoleOutEl.scrollHeight;
     }
@@ -207,10 +566,13 @@
     async function executeConsole() {
       const command = consoleInputEl.value;
       if (!command || !command.trim()) return;
+
       const token = tokenEl.value;
       const language = languageEl.value;
-      appendConsoleLine(`> ${command}`, 'input');
+
+      appendConsoleLine(`${command}`, 'input');
       consoleInputEl.value = '';
+
       try {
         const response = await fetch('/v1/runs', {
           method: 'POST',
@@ -220,18 +582,28 @@
           },
           body: JSON.stringify({ language, code: command })
         });
+
         const text = await response.text();
+
         try {
           const run = JSON.parse(text);
-          if (run.stdout) appendConsoleLine(String(run.stdout), 'stdout');
-          if (run.stderr) appendConsoleLine(String(run.stderr), 'stderr');
-          const exit = typeof run.exit_code === 'number' ? run.exit_code : (run.exit_code || 0);
-          appendConsoleLine(`exit ${exit}`, 'meta');
+
+          if (run.error) {
+            appendConsoleLine(`Error: ${run.error}`, 'error');
+          } else {
+            if (run.stdout) appendConsoleLine(String(run.stdout), 'stdout');
+            if (run.stderr) appendConsoleLine(String(run.stderr), 'stderr');
+
+            const exit = typeof run.exit_code === 'number' ? run.exit_code : (run.exit_code || 0);
+            if (exit !== 0) {
+              appendConsoleLine(`Process exited with code ${exit}`, 'meta');
+            }
+          }
         } catch (_) {
           appendConsoleLine(text, 'stdout');
         }
       } catch (err) {
-        appendConsoleLine(String(err), 'error');
+        appendConsoleLine(`Connection error: ${String(err)}`, 'error');
       }
     }
 
@@ -241,6 +613,11 @@
         e.preventDefault();
         executeConsole();
       }
+    });
+
+    // Focus console input on page load
+    window.addEventListener('load', () => {
+      consoleInputEl.focus();
     });
   </script>
 </body>
