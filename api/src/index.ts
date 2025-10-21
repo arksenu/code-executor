@@ -83,14 +83,10 @@ if (process.env.ADMIN_UI_PATH) {
 }
 
 logger.info('Serving admin UI', { adminDir });
-app.use(express.static(adminDir));
-// Explicit index fallback (handles cases where static middleware is bypassed)
-app.get('/', (_req, res) => {
-  res.sendFile(path.join(adminDir, 'index.html'));
-});
 
 // Enable CORS for all origins (customize for production)
 // This is required for Open-WebUI integration as it needs to access the API from the browser
+// Applied before static serving to ensure all resources get CORS headers
 app.use(cors({
   origin: true, // Allow all origins in development
   credentials: true,
@@ -98,9 +94,15 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-app.use(helmet());
 app.use(compression());
 app.use(bodyParser.json({ limit: '1mb' }));
+
+// Static file serving and routes WITHOUT Helmet (to allow inline scripts in admin UI)
+app.use(express.static(adminDir));
+// Explicit index fallback (handles cases where static middleware is bypassed)
+app.get('/', (_req, res) => {
+  res.sendFile(path.join(adminDir, 'index.html'));
+});
 
 // Serve OpenAPI spec (no auth required for spec discovery)
 // This endpoint is used by Open-WebUI to discover available API endpoints and their schemas
@@ -267,7 +269,8 @@ app.get('/v1/models', (_req, res) => {
 });
 
 registerHealthRoutes(app);
-// Apply auth only to API routes, not to static assets
+// Apply Helmet and auth only to API routes, not to static assets
+app.use('/v1', helmet());  // Security headers for API routes only
 app.use('/v1', authenticator.middleware());
 registerFileRoutes(app, { storage });
 registerRunRoutes(app, { orchestrator, runStore, limiter, tokenLimits: apiKeys });
