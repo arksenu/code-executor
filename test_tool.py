@@ -1,6 +1,35 @@
 #!/usr/bin/env python3
 """
-Test script to use the Code Interpreter API directly
+Code Interpreter API Test Script
+=================================
+
+This is a standalone test script for the Code Interpreter API.
+Use this to verify the API is working correctly without needing Open-WebUI.
+
+USAGE:
+1. Ensure the Code Interpreter API is running:
+   docker compose --profile runners up -d
+
+2. Run this script:
+   python3 test_tool.py
+
+3. Expected output:
+   - Python code execution results
+   - Node.js code execution results  
+   - Complex Python example with JSON output
+
+This script tests the API endpoints directly using the requests library.
+It's useful for:
+- Debugging API connectivity issues
+- Testing after API changes
+- Verifying the setup before Open-WebUI integration
+- Understanding the API request/response format
+
+Default configuration:
+- API URL: http://localhost:8080/v1/runs
+- API Key: dev_123 (development key)
+
+Modify the constants below if your setup differs.
 """
 
 import requests

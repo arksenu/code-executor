@@ -13,6 +13,7 @@ An MVP implementation of an isolated code execution service that mirrors the Ope
 - Jest unit and integration tests covering success, timeout, OOM, and artifact flows
 - Docker Compose stack for local development with one image per language
 - Minimal admin UI for manual run submission
+- **Open-WebUI Integration**: Use as a code execution tool in AI chat interfaces
 
 ## Quickstart
 
@@ -153,6 +154,17 @@ See [`api/openapi/spec.yaml`](api/openapi/spec.yaml) for the full REST schema.
   # or
   docker compose down --remove-orphans && docker compose --profile runners down --remove-orphans
   ```
+
+## Open-WebUI Integration
+
+This API can be integrated with [Open-WebUI](https://github.com/open-webui/open-webui) to provide code execution capabilities in AI chat interfaces. 
+
+**Quick Setup:**
+1. Start the API: `make up`
+2. Import `openwebui_tool.py` into Open-WebUI's Tools section
+3. Use `host.docker.internal:8080` if Open-WebUI is in Docker
+
+For detailed instructions, see [Open-WebUI Integration Guide](docs/OPENWEBUI_INTEGRATION.md).
 
 ## License
 

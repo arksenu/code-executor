@@ -1,7 +1,30 @@
 """
-Tool: Code Interpreter
-Description: Execute code in sandboxed environments (Python, Node.js, Ruby, PHP)
-Author: Assistant
+Open-WebUI Tool: Code Interpreter
+==================================
+
+This tool enables code execution capabilities in Open-WebUI chat interfaces.
+It connects to the Code Interpreter API to run Python, Node.js, Ruby, and PHP
+code in secure Docker containers.
+
+SETUP INSTRUCTIONS:
+1. Ensure Code Interpreter API is running: docker compose --profile runners up -d
+2. Copy this entire file content
+3. In Open-WebUI: Settings → Workspace → Tools → New Tool
+4. Paste the content and save with name "Code Interpreter"
+5. Enable the tool in your chat sessions
+
+IMPORTANT: If Open-WebUI is running in Docker, change the api_url below from
+'localhost' to 'host.docker.internal' to access the host machine's ports.
+
+Functions available in chat:
+- run_python(code): Execute Python code
+- run_javascript(code): Execute Node.js code  
+- run_ruby(code): Execute Ruby code
+- run_php(code): Execute PHP code
+- execute_code(code, language): Generic execution
+
+Author: Code Interpreter API Integration
+Version: 1.0.0
 """
 
 import json

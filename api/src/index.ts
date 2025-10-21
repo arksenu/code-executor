@@ -90,6 +90,7 @@ app.get('/', (_req, res) => {
 });
 
 // Enable CORS for all origins (customize for production)
+// This is required for Open-WebUI integration as it needs to access the API from the browser
 app.use(cors({
   origin: true, // Allow all origins in development
   credentials: true,
@@ -102,7 +103,8 @@ app.use(compression());
 app.use(bodyParser.json({ limit: '1mb' }));
 
 // Serve OpenAPI spec (no auth required for spec discovery)
-// Since we don't have a YAML parser installed, let's create a pre-converted JSON version
+// This endpoint is used by Open-WebUI to discover available API endpoints and their schemas
+// Since we don't have a YAML parser installed, we return a pre-converted JSON version
 app.get('/openapi.json', (_req, res) => {
   // Hardcoded OpenAPI spec in JSON format (converted from spec.yaml)
   // Update the server URL to match the actual deployment
@@ -247,7 +249,9 @@ app.get('/openapi.json', (_req, res) => {
   res.json(spec);
 });
 
-// Add a dummy /models endpoint for compatibility with OpenAI clients
+// Add dummy /models endpoints for compatibility with OpenAI clients
+// Open-WebUI sometimes checks these endpoints when detecting API type
+// We return an empty list since we're not a language model provider
 app.get('/models', (_req, res) => {
   res.json({
     object: "list",
