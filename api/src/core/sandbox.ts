@@ -10,7 +10,8 @@ const languageImageMap: Record<string, string> = {
   python: process.env.RUNNER_IMAGE_PYTHON ?? 'code-interpreter-runner-python:latest',
   node: process.env.RUNNER_IMAGE_NODE ?? 'code-interpreter-runner-node:latest',
   ruby: process.env.RUNNER_IMAGE_RUBY ?? 'code-interpreter-runner-ruby:latest',
-  php: process.env.RUNNER_IMAGE_PHP ?? 'code-interpreter-runner-php:latest'
+  php: process.env.RUNNER_IMAGE_PHP ?? 'code-interpreter-runner-php:latest',
+  go: process.env.RUNNER_IMAGE_GO ?? 'code-interpreter-runner-go:latest'
 };
 
 export interface DockerRunnerOptions {
@@ -93,6 +94,8 @@ export class DockerSandbox implements SandboxRunner {
     const disableSecurity = process.env.DISABLE_SANDBOX_SECURITY === '1';
     const hostSandbox = process.env.HOST_SANDBOX_DIR;
     const hostRunDir = hostSandbox ? path.join(hostSandbox, path.basename(runDir)) : runDir;
+    // Go compiler needs more processes for compilation
+    const pidsLimit = spec.language === 'go' ? '256' : '32';
     const args: string[] = [
       'run',
       '-i',
@@ -101,7 +104,7 @@ export class DockerSandbox implements SandboxRunner {
       containerName,
       '--network=none',
       '--read-only',
-      '--pids-limit=32',
+      `--pids-limit=${pidsLimit}`,
       '--cpus',
       (spec.limits.cpu_ms / 1000).toFixed(2),
       '--memory',
@@ -162,6 +165,8 @@ export class DockerSandbox implements SandboxRunner {
         return 'main.rb';
       case 'php':
         return 'main.php';
+      case 'go':
+        return 'main.go';
       default:
         return 'main.txt';
     }

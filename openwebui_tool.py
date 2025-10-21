@@ -3,7 +3,7 @@ Open-WebUI Tool: Code Interpreter
 ==================================
 
 This tool enables code execution capabilities in Open-WebUI chat interfaces.
-It connects to the Code Interpreter API to run Python, Node.js, Ruby, and PHP
+It connects to the Code Interpreter API to run Python, Node.js, Ruby, PHP, and Go
 code in secure Docker containers.
 
 SETUP INSTRUCTIONS:
@@ -21,6 +21,7 @@ Functions available in chat:
 - run_javascript(code): Execute Node.js code  
 - run_ruby(code): Execute Ruby code
 - run_php(code): Execute PHP code
+- run_go(code): Execute Go code
 - execute_code(code, language): Generic execution
 
 Author: Code Interpreter API Integration
@@ -57,7 +58,7 @@ class Tools:
         Execute code in a sandboxed environment.
         
         :param code: The code to execute
-        :param language: Programming language (python, node, ruby, php)
+        :param language: Programming language (python, node, ruby, php, go)
         :return: Execution results including output and any errors
         """
         
@@ -150,3 +151,12 @@ class Tools:
         :return: Execution results
         """
         return self.execute_code(code, "php", __user__)
+
+    def run_go(self, code: str, __user__: Optional[dict] = None) -> str:
+        """
+        Execute Go code in a sandboxed environment.
+        
+        :param code: Go code to execute
+        :return: Execution results
+        """
+        return self.execute_code(code, "go", __user__)

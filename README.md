@@ -1,6 +1,6 @@
 # Code Interpreter API
 
-An MVP implementation of an isolated code execution service that mirrors the OpenAI Code Interpreter run semantics. The API accepts untrusted code for Python, Node.js, Ruby, and PHP, executes it inside hardened containers, and returns structured results including stdout/stderr streams and signed artifact URLs.
+An MVP implementation of an isolated code execution service that mirrors the OpenAI Code Interpreter run semantics. The API accepts untrusted code for Python, Node.js, Ruby, PHP, and Go, executes it inside hardened containers, and returns structured results including stdout/stderr streams and signed artifact URLs.
 
 ## Features
 
@@ -50,7 +50,7 @@ An MVP implementation of an isolated code execution service that mirrors the Ope
      }'
    ```
 
-   Language values must be one of: `python`, `node`, `ruby`, `php` (use `node`, not `node.js`).
+   Language values must be one of: `python`, `node`, `ruby`, `php`, `go` (use `node`, not `node.js`).
 
 5. **Tear down**
 
@@ -124,7 +124,7 @@ See [`api/openapi/spec.yaml`](api/openapi/spec.yaml) for the full REST schema.
   # or: docker compose up -d --build api
   ```
 
-- Runner entrypoint edits (`runners/{python|node|ruby|php}/entrypoint.sh`):
+- Runner entrypoint edits (`runners/{python|node|ruby|php|go}/entrypoint.{sh|py}`):
 
   - Single runner:
     ```bash

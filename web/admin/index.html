@@ -405,6 +405,7 @@
             <option value="node">Node.js 20</option>
             <option value="ruby">Ruby 3.x</option>
             <option value="php">PHP 8.x</option>
+            <option value="go">Go 1.21</option>
           </select>
         </div>
 
@@ -463,7 +464,16 @@
       python: 'Python',
       node: 'Node.js',
       ruby: 'Ruby',
-      php: 'PHP'
+      php: 'PHP',
+      go: 'Go'
+    };
+
+    const defaultCode = {
+      python: 'print("hello from sandbox")',
+      node: 'console.log("hello from sandbox");',
+      ruby: 'puts "hello from sandbox"',
+      php: '<?php\necho "hello from sandbox\\n";',
+      go: 'package main\n\nimport "fmt"\n\nfunc main() {\n    fmt.Println("hello from sandbox")\n}'
     };
 
     function updateConsoleTitle() {
@@ -474,6 +484,8 @@
     languageEl.addEventListener('change', () => {
       updateConsoleTitle();
       clearConsole();
+      // Update default code for the selected language
+      codeEl.value = defaultCode[languageEl.value] || '';
     });
 
     updateConsoleTitle();

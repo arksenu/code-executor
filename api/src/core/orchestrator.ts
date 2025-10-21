@@ -100,7 +100,7 @@ export class Orchestrator {
     if (!request.language) {
       throw Boom.badRequest('language is required');
     }
-    if (!['python', 'node', 'ruby', 'php'].includes(request.language)) {
+    if (!['python', 'node', 'ruby', 'php', 'go'].includes(request.language)) {
       throw Boom.badRequest('unsupported language');
     }
     if (!request.code) {
