@@ -1,1 +1,51 @@
+# Node
+node_modules/
+dist/
+*.log
+
+# Environment
 .env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage/
+*.test.js
+
+# Sandbox and artifacts
+sandbox/
+artifacts/
+data/
+
+# Temporary files
+*.tmp
+tmp/
+/tmp/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv
+pip-log.txt
+
+# Docker
+*.pid
+
+# Open-WebUI exports (contains API keys)
+*export*.json
+
+# Test scripts (optional - remove this line if you want to commit them)
+# test_tool.py
+# openwebui_function.py
