@@ -164,7 +164,7 @@ This API can be integrated with [Open-WebUI](https://github.com/open-webui/open-
 **Quick Setup:**
 1. Start the API: `make up`
 2. Import `openwebui_tool.py` into Open-WebUI's Tools section
-3. Use `host.docker.internal:8080` if Open-WebUI is in Docker
+3. Use `host.docker.internal:8080` if Open-WebUI is in Docker, or just import `openwebui_tool_docker.py` instead of `openwebui_tool.py`
 
 For detailed instructions, see [Open-WebUI Integration Guide](docs/OPENWEBUI_INTEGRATION.md).
 
