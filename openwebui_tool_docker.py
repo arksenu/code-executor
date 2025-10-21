@@ -1,6 +1,6 @@
 """
-Open-WebUI Tool: Code Interpreter
-==================================
+Open-WebUI Tool: Code Interpreter (Docker Version)
+===================================================
 
 This tool enables code execution capabilities in Open-WebUI chat interfaces.
 It connects to the Code Interpreter API to run Python, Node.js, Ruby, PHP, and Go
@@ -13,8 +13,8 @@ SETUP INSTRUCTIONS:
 4. Paste the content and save with name "Code Interpreter"
 5. Enable the tool in your chat sessions
 
-IMPORTANT: If Open-WebUI is running in Docker, change the api_url below from
-'localhost' to 'host.docker.internal' to access the host machine's ports.
+NOTE: This version is configured for Open-WebUI running in Docker.
+It uses 'host.docker.internal' to access the host machine's ports.
 
 Functions available in chat:
 - run_python(code): Execute Python code
@@ -25,7 +25,7 @@ Functions available in chat:
 - execute_code(code, language): Generic execution
 
 Author: Code Interpreter API Integration
-Version: 1.0.0
+Version: 1.0.1
 """
 
 import json
@@ -37,8 +37,8 @@ from pydantic import BaseModel, Field
 class Tools:
     class Valves(BaseModel):
         api_url: str = Field(
-            default="http://localhost:8080/v1/runs",
-            description="Code Interpreter API endpoint"
+            default="http://host.docker.internal:8080/v1/runs",
+            description="Code Interpreter API endpoint (configured for Docker)"
         )
         api_key: str = Field(
             default="dev_123",
@@ -104,12 +104,19 @@ class Tools:
             if result.get("exit_code") is not None:
                 output_parts.append(f"\n🔢 Exit code: {result['exit_code']}")
             
+            # Add timing information for debugging
+            if result.get("usage"):
+                usage = result["usage"]
+                if usage.get("compile_ms"):
+                    output_parts.append(f"\n⏱️ Compile time: {usage['compile_ms']}ms")
+                output_parts.append(f"⏱️ Execution time: {usage.get('wall_ms', 0)}ms")
+            
             return "\n".join(output_parts)
             
         except requests.exceptions.Timeout:
             return f"⏱️ Code execution timed out ({self.valves.timeout} seconds limit)"
         except requests.exceptions.ConnectionError as e:
-            return f"❌ Could not connect to Code Interpreter API at {self.valves.api_url}\n\nIf Open-WebUI is running in Docker, use the Docker version of this tool or change api_url to 'http://host.docker.internal:8080/v1/runs'\n\nError: {str(e)}"
+            return f"❌ Could not connect to Code Interpreter API at {self.valves.api_url}\n\nIf Open-WebUI is running in Docker, make sure the URL uses 'host.docker.internal' instead of 'localhost'.\n\nError: {str(e)}"
         except requests.exceptions.HTTPError as e:
             if e.response.status_code == 401:
                 return "🔐 Authentication failed. Check API key configuration."
