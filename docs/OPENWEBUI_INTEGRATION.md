@@ -4,7 +4,7 @@ This document explains how to integrate the Code Interpreter API with [Open-WebU
 
 ## Overview
 
-The integration allows Open-WebUI to execute code in four languages (Python, Node.js, Ruby, PHP) through sandboxed Docker containers, providing a safe environment for running untrusted code directly from chat conversations.
+The integration allows Open-WebUI to execute code in five languages (Python, Node.js, Ruby, PHP, and Go) through sandboxed Docker containers, providing a safe environment for running untrusted code directly from chat conversations.
 
 ## Architecture
 
@@ -49,7 +49,9 @@ The API will be available at `http://localhost:8080`
 
 1. In Open-WebUI, go to **Settings → Workspace → Tools**
 2. Click **New Tool**
-3. Copy the contents of `openwebui_tool.py`
+3. Copy the contents of:
+   - `openwebui_tool.py` for standard setup
+   - `openwebui_tool_docker.py` if Open-WebUI is running in Docker (recommended)
 4. Save the tool with a descriptive name
 
 ### 3. Docker Networking Configuration
@@ -62,7 +64,9 @@ The API URL depends on where Open-WebUI is running:
 | Docker container | `http://host.docker.internal:8080/v1/runs` |
 | Same Docker network | `http://code-interpreter-api:8080/v1/runs` |
 
-**Important**: If Open-WebUI is in Docker, you MUST use `host.docker.internal` instead of `localhost`.
+**Important**: If Open-WebUI is in Docker, you have two options:
+1. Use `openwebui_tool_docker.py` which has `host.docker.internal` pre-configured (recommended)
+2. Use `openwebui_tool.py` and change the `api_url` valve to `http://host.docker.internal:8080/v1/runs`
 
 ## File Structure
 
@@ -72,6 +76,7 @@ code-interpreter/
 │   └── src/
 │       └── index.ts          # Enhanced with CORS, OpenAPI spec
 ├── openwebui_tool.py         # Open-WebUI tool implementation
+├── openwebui_tool_docker.py  # Docker-specific version with host.docker.internal
 ├── test_tool.py              # Standalone test script
 └── docs/
     └── OPENWEBUI_INTEGRATION.md  # This file
@@ -89,7 +94,7 @@ Added endpoints and features for Open-WebUI compatibility:
 ### `openwebui_tool.py`
 The main Open-WebUI tool implementation with:
 - **Class-based structure**: Uses `Tools` class as required by Open-WebUI
-- **5 functions**: `execute_code`, `run_python`, `run_javascript`, `run_ruby`, `run_php`
+- **6 functions**: `execute_code`, `run_python`, `run_javascript`, `run_ruby`, `run_php`, `run_go`
 - **Error handling**: Graceful failures with emoji indicators
 - **Configurable endpoints**: Via `Valves` configuration
 
@@ -123,6 +128,8 @@ puts factorial(10)"
 "Can you run JavaScript code to generate 10 random numbers?"
 
 "Execute PHP code to show the current date and time"
+
+"Run Go code to print hello world"
 ```
 
 ### Function Reference
@@ -133,6 +140,7 @@ puts factorial(10)"
 | `run_javascript(code)` | Node.js 20 | Execute JavaScript code |
 | `run_ruby(code)` | Ruby 3.x | Execute Ruby code |
 | `run_php(code)` | PHP 8.x | Execute PHP code |
+| `run_go(code)` | Go 1.21 | Execute Go code (compilation + execution) |
 | `execute_code(code, language)` | Any | Generic execution with language parameter |
 
 ## Security Features
@@ -147,11 +155,18 @@ puts factorial(10)"
 
 | Resource | Limit |
 |----------|-------|
-| Timeout | 5 seconds |
+| Timeout | 5 seconds (API), 60 seconds (Tool) |
 | Memory | 256 MB |
 | CPU | 5000ms |
 | Output size | 1 MB |
 | Artifacts | 5 MB total |
+
+### Go Language Considerations
+
+Go programs require compilation before execution, which adds approximately 3-4 seconds to the total execution time. The Docker container uses `golang:1.21-alpine` and handles:
+- Compilation with optimization flags (`-ldflags -s -w`)
+- Increased process limits (256 pids) for concurrent compilation
+- Proper memory management for ARM64 architectures
 
 ## Troubleshooting
 
@@ -162,7 +177,8 @@ puts factorial(10)"
 
 ### Issue: "Code execution timed out"
 
-**Cause**: Code took longer than 30 seconds (tool timeout) or 5 seconds (API timeout)
+**Cause**: Code took longer than 60 seconds (tool timeout) or 5 seconds (API timeout)
+**Note**: Go programs require compilation which takes 3-4 seconds
 **Solution**: Optimize code or increase timeout in API configuration
 
 ### Issue: Tool not appearing in chat
