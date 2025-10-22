@@ -1,4 +1,4 @@
-export type Language = 'python' | 'node' | 'ruby' | 'php';
+export type Language = 'python' | 'node' | 'ruby' | 'php' | 'go';
 
 export interface RunLimits {
   timeout_ms: number;

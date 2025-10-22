@@ -1,6 +1,6 @@
 # Code Interpreter API
 
-An MVP implementation of an isolated code execution service that mirrors the OpenAI Code Interpreter run semantics. The API accepts untrusted code for Python, Node.js, Ruby, and PHP, executes it inside hardened containers, and returns structured results including stdout/stderr streams and signed artifact URLs.
+An MVP implementation of an isolated code execution service that mirrors the OpenAI Code Interpreter run semantics. The API accepts untrusted code for Python, Node.js, Ruby, PHP, and Go, executes it inside hardened containers, and returns structured results including stdout/stderr streams and signed artifact URLs.
 
 ## Features
 
@@ -50,7 +50,7 @@ An MVP implementation of an isolated code execution service that mirrors the Ope
      }'
    ```
 
-   Language values must be one of: `python`, `node`, `ruby`, `php` (use `node`, not `node.js`).
+   Language values must be one of: `python`, `node`, `ruby`, `php`, `go` (use `node`, not `node.js`).
 
 5. **Tear down**
 
@@ -124,7 +124,7 @@ See [`api/openapi/spec.yaml`](api/openapi/spec.yaml) for the full REST schema.
   # or: docker compose up -d --build api
   ```
 
-- Runner entrypoint edits (`runners/{python|node|ruby|php}/entrypoint.sh`):
+- Runner entrypoint edits (`runners/{python|node|ruby|php|go}/entrypoint.{sh|py}`):
 
   - Single runner:
     ```bash
@@ -164,7 +164,7 @@ This API can be integrated with [Open-WebUI](https://github.com/open-webui/open-
 **Quick Setup:**
 1. Start the API: `make up`
 2. Import `openwebui_tool.py` into Open-WebUI's Tools section
-3. Use `host.docker.internal:8080` if Open-WebUI is in Docker
+3. Use `host.docker.internal:8080` for the api_url in valve settings if Open-WebUI is in Docker, or just import `openwebui_tool_docker.py` instead of `openwebui_tool.py`
 
 For detailed instructions, see [Open-WebUI Integration Guide](docs/OPENWEBUI_INTEGRATION.md).
 

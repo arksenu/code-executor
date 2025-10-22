@@ -21,6 +21,7 @@ services:
       RUNNER_IMAGE_NODE: code-interpreter-runner-node:dev
       RUNNER_IMAGE_RUBY: code-interpreter-runner-ruby:dev
       RUNNER_IMAGE_PHP: code-interpreter-runner-php:dev
+      RUNNER_IMAGE_GO: code-interpreter-runner-go:dev
       DISABLE_SANDBOX_SECURITY: '1'
     ports:
       - '8080:8080'
@@ -36,6 +37,7 @@ services:
       - runner-node
       - runner-ruby
       - runner-php
+      - runner-go
   runner-python:
     build: ./runners/python
     image: code-interpreter-runner-python:dev
@@ -54,5 +56,10 @@ services:
   runner-php:
     build: ./runners/php
     image: code-interpreter-runner-php:dev
+    profiles: ['runners']
+    command: ["sleep", "infinity"]
+  runner-go:
+    build: ./runners/go
+    image: code-interpreter-runner-go:dev
     profiles: ['runners']
     command: ["sleep", "infinity"]
