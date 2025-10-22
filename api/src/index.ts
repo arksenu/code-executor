@@ -7,6 +7,7 @@ import bodyParser from 'body-parser';
 import Boom from '@hapi/boom';
 import path from 'node:path';
 import fs from 'node:fs';
+import http from 'node:http';
 import { fileURLToPath } from 'node:url';
 import { Logger } from './util/logger.js';
 import { ArtifactStorage } from './core/storage.js';
@@ -18,6 +19,7 @@ import { DockerSandbox } from './core/sandbox.js';
 import { registerHealthRoutes } from './routes/health.js';
 import { registerFileRoutes } from './routes/files.js';
 import { registerRunRoutes } from './routes/runs.js';
+import { registerStreamRoutes } from './routes/stream.js';
 
 const logger = new Logger({ service: 'code-interpreter-api' });
 
@@ -224,6 +226,106 @@ app.get('/openapi.json', (_req, res) => {
             }
           }
         }
+      },
+      '/v1/runs/stream': {
+        post: {
+          operationId: 'execute_code_streaming',
+          summary: 'Execute code with real-time streaming',
+          description: 'Create a code execution run with WebSocket streaming support. Returns immediately with a run ID. Connect to the WebSocket endpoint to receive real-time output.',
+          tags: ['Code Execution', 'Streaming'],
+          security: [{ bearerAuth: [] }],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  required: ['language', 'code'],
+                  properties: {
+                    language: {
+                      type: 'string',
+                      enum: ['python', 'node', 'ruby', 'php', 'go'],
+                      description: 'Programming language to execute'
+                    },
+                    code: {
+                      type: 'string',
+                      maxLength: 204800,
+                      description: 'Code to execute'
+                    },
+                    args: {
+                      type: 'array',
+                      items: { type: 'string' },
+                      description: 'Command-line arguments'
+                    },
+                    env: {
+                      type: 'object',
+                      additionalProperties: { type: 'string' },
+                      description: 'Environment variables'
+                    }
+                  }
+                }
+              }
+            }
+          },
+          responses: {
+            '200': {
+              description: 'Run created successfully, connect to WebSocket for streaming output',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      id: {
+                        type: 'string',
+                        description: 'Unique run identifier'
+                      },
+                      status: {
+                        type: 'string',
+                        enum: ['starting'],
+                        description: 'Initial status'
+                      },
+                      message: {
+                        type: 'string',
+                        description: 'Instructions for connecting to WebSocket'
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            '400': {
+              description: 'Bad Request'
+            },
+            '401': {
+              description: 'Unauthorized'
+            },
+            '429': {
+              description: 'Rate Limited'
+            }
+          }
+        }
+      },
+      '/v1/runs/{runId}/stream': {
+        get: {
+          operationId: 'stream_run_output',
+          summary: 'WebSocket endpoint for streaming run output',
+          description: 'Connect via WebSocket to receive real-time execution output. Sends JSON messages with types: "connected", "status", "stdout", "stderr", "complete", or "error".',
+          tags: ['Streaming'],
+          parameters: [
+            {
+              name: 'runId',
+              in: 'path',
+              required: true,
+              schema: { type: 'string' },
+              description: 'Run identifier from POST /v1/runs/stream'
+            }
+          ],
+          responses: {
+            '101': {
+              description: 'Switching Protocols - WebSocket connection established'
+            }
+          }
+        }
       }
     },
     components: {
@@ -240,6 +342,10 @@ app.get('/openapi.json', (_req, res) => {
       {
         name: 'Code Execution',
         description: 'Execute code in sandboxed environments'
+      },
+      {
+        name: 'Streaming',
+        description: 'Real-time WebSocket streaming for code execution'
       },
       {
         name: 'System',
@@ -275,6 +381,18 @@ app.use('/v1', authenticator.middleware());
 registerFileRoutes(app, { storage });
 registerRunRoutes(app, { orchestrator, runStore, limiter, tokenLimits: apiKeys });
 
+// Create HTTP server for WebSocket support
+const server = http.createServer(app);
+
+// Register WebSocket streaming routes
+registerStreamRoutes(app, server, {
+  orchestrator,
+  runStore,
+  limiter,
+  tokenLimits: apiKeys,
+  logger: logger.child({ component: 'stream' })
+});
+
 app.use((err: Boom.Boom | Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   if (!Boom.isBoom(err)) {
     logger.error('unhandled error', { message: err.message });
@@ -286,8 +404,8 @@ app.use((err: Boom.Boom | Error, _req: express.Request, res: express.Response, _
 });
 
 const port = Number(process.env.PORT ?? 8080);
-app.listen(port, () => {
-  logger.info('api listening', { port: port.toString() });
+server.listen(port, () => {
+  logger.info('api listening with WebSocket support', { port: port.toString() });
 });
 
 export default app;

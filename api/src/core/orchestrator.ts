@@ -3,7 +3,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import Boom from '@hapi/boom';
 import { mergeLimits } from './limits.js';
-import type { RunRequest, RunRecord } from './types.js';
+import type { RunRequest, RunRecord, StreamCallback } from './types.js';
 import { ArtifactStorage } from './storage.js';
 import { Logger } from '../util/logger.js';
 import type { SandboxRunner } from './types.js';
@@ -53,6 +53,72 @@ export class Orchestrator {
       workdir,
       limits,
       stagedFiles
+    });
+
+    const artifacts = [];
+    let totalArtifactBytes = 0;
+    for (const artifact of result.artifacts) {
+      if (!artifact.path.startsWith(workdir)) {
+        this.options.logger.warn('discarding artifact outside workdir', { artifact: artifact.path, runId });
+        continue;
+      }
+      const relative = path.relative(path.join(workdir, 'outputs'), artifact.path);
+      if (relative.startsWith('..')) {
+        continue;
+      }
+      if (artifacts.length >= limits.max_artifact_files) {
+        break;
+      }
+      if (totalArtifactBytes + artifact.size > limits.max_artifact_bytes) {
+        break;
+      }
+      const stored = this.options.artifactStorage.moveArtifact(artifact.path, artifact.name, artifact.contentType);
+      artifacts.push(stored);
+      totalArtifactBytes += artifact.size;
+    }
+
+    const runRecord: RunRecord = {
+      id: runId,
+      status: result.status,
+      exit_code: result.exitCode ?? 0,
+      stdout: result.stdout.toString('utf8'),
+      stderr: result.stderr.toString('utf8'),
+      usage: result.usage,
+      artifacts,
+      limits,
+      created_at: new Date().toISOString(),
+      language: request.language,
+      code_sha256: codeSha256
+    };
+
+    this.options.logger.info('run completed', { runId, status: runRecord.status, apiKey });
+    fs.rm(workdir, { recursive: true, force: true }, () => undefined);
+    return runRecord;
+  }
+
+  public async createRunWithStreaming(request: RunRequest, apiKey: string, streamCallback: StreamCallback): Promise<RunRecord> {
+    this.validateRequest(request);
+    const limits = mergeLimits(request.limits);
+    const runId = `run_${generateId(12)}`;
+    const workdir = path.join(this.options.workRoot, runId);
+    fs.mkdirSync(path.join(workdir, 'inputs'), { recursive: true });
+    fs.mkdirSync(path.join(workdir, 'outputs'), { recursive: true });
+
+    const stagedFiles = this.stageInputFiles(request.files ?? [], workdir);
+
+    const codeSha256 = crypto.createHash('sha256').update(request.code).digest('hex');
+    const env = this.buildEnvironment(request.env);
+
+    const result = await this.options.sandboxRunner.run({
+      id: runId,
+      language: request.language,
+      code: request.code,
+      args: request.args ?? [],
+      env,
+      workdir,
+      limits,
+      stagedFiles,
+      streamCallback
     });
 
     const artifacts = [];

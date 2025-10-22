@@ -67,6 +67,17 @@ export interface SandboxResult {
   artifacts: Array<{ path: string; name: string; size: number; contentType?: string }>;
 }
 
+export type StreamEventType = 'stdout' | 'stderr' | 'status';
+
+export interface StreamEvent {
+  type: StreamEventType;
+  data?: string;
+  status?: 'running' | 'completed' | 'timeout' | 'oom' | 'failed';
+  timestamp: number;
+}
+
+export type StreamCallback = (event: StreamEvent) => void;
+
 export interface SandboxRunSpec {
   id: string;
   language: Language;
@@ -76,6 +87,7 @@ export interface SandboxRunSpec {
   workdir: string;
   limits: RunLimits;
   stagedFiles: Array<{ sourcePath: string; destPath: string }>;
+  streamCallback?: StreamCallback;
 }
 
 export interface SandboxRunner {

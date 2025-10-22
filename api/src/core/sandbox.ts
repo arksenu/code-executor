@@ -44,11 +44,37 @@ export class DockerSandbox implements SandboxRunner {
 
     const stdoutChunks: Buffer[] = [];
     const stderrChunks: Buffer[] = [];
+
+    // Emit status event when execution starts
+    if (spec.streamCallback) {
+      spec.streamCallback({
+        type: 'status',
+        status: 'running',
+        timestamp: Date.now()
+      });
+    }
+
     child.stdout.on('data', (chunk: Buffer) => {
       stdoutChunks.push(chunk);
+      // Stream stdout in real-time if callback is provided
+      if (spec.streamCallback) {
+        spec.streamCallback({
+          type: 'stdout',
+          data: chunk.toString('utf8'),
+          timestamp: Date.now()
+        });
+      }
     });
     child.stderr.on('data', (chunk: Buffer) => {
       stderrChunks.push(chunk);
+      // Stream stderr in real-time if callback is provided
+      if (spec.streamCallback) {
+        spec.streamCallback({
+          type: 'stderr',
+          data: chunk.toString('utf8'),
+          timestamp: Date.now()
+        });
+      }
     });
 
     const [code, signal] = (await once(child, 'exit')) as [number | null, NodeJS.Signals | null];
@@ -72,6 +98,15 @@ export class DockerSandbox implements SandboxRunner {
     }
 
     const artifacts = this.collectArtifacts(runDir);
+
+    // Emit completion status event
+    if (spec.streamCallback) {
+      spec.streamCallback({
+        type: 'status',
+        status: status === 'succeeded' ? 'completed' : status,
+        timestamp: Date.now()
+      });
+    }
 
     return {
       status,

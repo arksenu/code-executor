@@ -414,6 +414,11 @@
           <textarea id="code" placeholder="Enter your code here...">print("hello from sandbox")</textarea>
         </div>
 
+        <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem;">
+          <input id="streaming" type="checkbox" style="width: auto;" />
+          <label for="streaming" style="margin: 0; cursor: pointer;">Enable Real-time Streaming (WebSocket)</label>
+        </div>
+
         <button id="run" class="btn" type="button">Execute Code</button>
       </div>
 
@@ -453,6 +458,7 @@
     const languageEl = document.getElementById('language');
     const codeEl = document.getElementById('code');
     const runBtn = document.getElementById('run');
+    const streamingEl = document.getElementById('streaming');
     const resultEl = document.getElementById('result');
     const resultStatusEl = document.getElementById('result-status');
     const consoleTitleEl = document.getElementById('console-title');
@@ -510,24 +516,17 @@
           'var(--text-secondary)';
     }
 
-    runBtn.addEventListener('click', async () => {
+    async function executeWithStreaming(token, language, code) {
+      clearConsole();
+      appendConsoleLine('Starting execution with real-time streaming...', 'meta');
+
+      setResultStatus('Streaming...', 'default');
+      resultEl.textContent = 'Connecting to WebSocket stream...';
+      resultEl.classList.add('loading');
+
       try {
-        const token = tokenEl.value;
-        const language = languageEl.value;
-        const code = codeEl.value;
-
-        if (!code.trim()) {
-          setResultStatus('No code provided', 'error');
-          resultEl.textContent = 'Please enter some code to execute.';
-          return;
-        }
-
-        console.log('Submitting run', { language, codeLen: code.length });
-        setResultStatus('Executing...', 'default');
-        resultEl.textContent = 'Submitting code for execution...';
-        resultEl.classList.add('loading');
-
-        const response = await fetch('/v1/runs', {
+        // Create streaming run
+        const response = await fetch('/v1/runs/stream', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -536,17 +535,117 @@
           body: JSON.stringify({ language, code })
         });
 
-        const text = await response.text();
-        console.log('Response status', response.status);
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Failed to create streaming run: ${errorText}`);
+        }
 
+        const { id: runId } = await response.json();
+        appendConsoleLine(`Run ID: ${runId}`, 'meta');
+
+        // Connect to WebSocket
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}/v1/runs/${runId}/stream`;
+        const ws = new WebSocket(wsUrl);
+
+        ws.onopen = () => {
+          appendConsoleLine('WebSocket connected, waiting for output...', 'meta');
+        };
+
+        ws.onmessage = (event) => {
+          try {
+            const message = JSON.parse(event.data);
+
+            if (message.type === 'connected') {
+              appendConsoleLine(`Connected to run: ${message.runId}`, 'meta');
+            } else if (message.type === 'status') {
+              appendConsoleLine(`Status: ${message.status}`, 'meta');
+            } else if (message.type === 'stdout') {
+              appendConsoleLine(message.data, 'stdout');
+            } else if (message.type === 'stderr') {
+              appendConsoleLine(message.data, 'stderr');
+            } else if (message.type === 'complete') {
+              appendConsoleLine('Execution complete!', 'meta');
+              resultEl.classList.remove('loading');
+              setResultStatus('Success (Streamed)', 'success');
+              resultEl.textContent = tryPretty(JSON.stringify(message.runRecord, null, 2));
+            } else if (message.type === 'error') {
+              appendConsoleLine(`Error: ${message.error}`, 'error');
+              resultEl.classList.remove('loading');
+              setResultStatus('Error', 'error');
+              resultEl.textContent = message.error;
+            }
+          } catch (err) {
+            console.error('Error parsing WebSocket message', err);
+          }
+        };
+
+        ws.onerror = (error) => {
+          appendConsoleLine('WebSocket error occurred', 'error');
+          resultEl.classList.remove('loading');
+          setResultStatus('WebSocket Error', 'error');
+          console.error('WebSocket error', error);
+        };
+
+        ws.onclose = () => {
+          appendConsoleLine('WebSocket connection closed', 'meta');
+        };
+
+      } catch (err) {
+        console.error('Streaming failed', err);
         resultEl.classList.remove('loading');
+        setResultStatus('Streaming Error', 'error');
+        resultEl.textContent = String(err);
+        appendConsoleLine(`Error: ${String(err)}`, 'error');
+      }
+    }
 
-        if (response.ok) {
-          setResultStatus('Success', 'success');
-          resultEl.textContent = tryPretty(text);
+    async function executeWithoutStreaming(token, language, code) {
+      console.log('Submitting run', { language, codeLen: code.length });
+      setResultStatus('Executing...', 'default');
+      resultEl.textContent = 'Submitting code for execution...';
+      resultEl.classList.add('loading');
+
+      const response = await fetch('/v1/runs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ language, code })
+      });
+
+      const text = await response.text();
+      console.log('Response status', response.status);
+
+      resultEl.classList.remove('loading');
+
+      if (response.ok) {
+        setResultStatus('Success', 'success');
+        resultEl.textContent = tryPretty(text);
+      } else {
+        setResultStatus('Error', 'error');
+        resultEl.textContent = tryPretty(text);
+      }
+    }
+
+    runBtn.addEventListener('click', async () => {
+      try {
+        const token = tokenEl.value;
+        const language = languageEl.value;
+        const code = codeEl.value;
+        const useStreaming = streamingEl.checked;
+
+        if (!code.trim()) {
+          setResultStatus('No code provided', 'error');
+          resultEl.textContent = 'Please enter some code to execute.';
+          return;
+        }
+
+        if (useStreaming) {
+          await executeWithStreaming(token, language, code);
         } else {
-          setResultStatus('Error', 'error');
-          resultEl.textContent = tryPretty(text);
+          await executeWithoutStreaming(token, language, code);
         }
       } catch (err) {
         console.error('Run failed', err);
