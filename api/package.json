@@ -1,5 +1,5 @@
 {
-  "name": "code-interpreter-api",
+  "name": "code-executor-api",
   "version": "0.1.0",
   "private": true,
   "type": "module",

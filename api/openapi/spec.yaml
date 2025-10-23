@@ -1,6 +1,6 @@
 openapi: 3.1.0
 info:
-  title: Code Interpreter API
+  title: Code Executor API
   version: 0.1.0
 servers:
   - url: https://api.example.com

@@ -3,7 +3,7 @@ services:
   api:
     build:
       context: ./api
-    image: code-interpreter-api:dev
+    image: code-executor-api:dev
     environment:
       PORT: 8080
       API_KEYS: dev_123:dev:5:10
@@ -16,12 +16,12 @@ services:
       # Optional: explicitly set admin UI path (auto-detected if not set)
       # ADMIN_UI_PATH: /app/web/admin
       # APPARMOR_PROFILE disabled on macOS Docker Desktop
-      # APPARMOR_PROFILE: codeinterpreter
-      RUNNER_IMAGE_PYTHON: code-interpreter-runner-python:dev
-      RUNNER_IMAGE_NODE: code-interpreter-runner-node:dev
-      RUNNER_IMAGE_RUBY: code-interpreter-runner-ruby:dev
-      RUNNER_IMAGE_PHP: code-interpreter-runner-php:dev
-      RUNNER_IMAGE_GO: code-interpreter-runner-go:dev
+      # APPARMOR_PROFILE: codeexecutor
+      RUNNER_IMAGE_PYTHON: code-executor-runner-python:dev
+      RUNNER_IMAGE_NODE: code-executor-runner-node:dev
+      RUNNER_IMAGE_RUBY: code-executor-runner-ruby:dev
+      RUNNER_IMAGE_PHP: code-executor-runner-php:dev
+      RUNNER_IMAGE_GO: code-executor-runner-go:dev
       DISABLE_SANDBOX_SECURITY: '1'
     ports:
       - '8080:8080'
@@ -40,26 +40,26 @@ services:
       - runner-go
   runner-python:
     build: ./runners/python
-    image: code-interpreter-runner-python:dev
+    image: code-executor-runner-python:dev
     profiles: ['runners']
     command: ["sleep", "infinity"]
   runner-node:
     build: ./runners/node
-    image: code-interpreter-runner-node:dev
+    image: code-executor-runner-node:dev
     profiles: ['runners']
     command: ["sleep", "infinity"]
   runner-ruby:
     build: ./runners/ruby
-    image: code-interpreter-runner-ruby:dev
+    image: code-executor-runner-ruby:dev
     profiles: ['runners']
     command: ["sleep", "infinity"]
   runner-php:
     build: ./runners/php
-    image: code-interpreter-runner-php:dev
+    image: code-executor-runner-php:dev
     profiles: ['runners']
     command: ["sleep", "infinity"]
   runner-go:
     build: ./runners/go
-    image: code-interpreter-runner-go:dev
+    image: code-executor-runner-go:dev
     profiles: ['runners']
     command: ["sleep", "infinity"]

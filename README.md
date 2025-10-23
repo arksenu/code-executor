@@ -1,6 +1,6 @@
-# Code Interpreter API
+# Code Executor API
 
-An MVP implementation of an isolated code execution service that mirrors the OpenAI Code Interpreter run semantics. The API accepts untrusted code for Python, Node.js, Ruby, PHP, and Go, executes it inside hardened containers, and returns structured results including stdout/stderr streams and signed artifact URLs.
+An MVP implementation of an isolated code execution service that provides secure code execution capabilities. The API accepts untrusted code for Python, Node.js, Ruby, PHP, and Go, executes it inside hardened containers, and returns structured results including stdout/stderr streams and signed artifact URLs.
 
 ## Features
 
@@ -72,7 +72,7 @@ Key environment variables for the API container:
 | `SIGNING_KEY` | HMAC signing secret for download URLs |
 | `SECCOMP_PROFILE` | Path to seccomp JSON profile mounted inside the container |
 | `APPARMOR_PROFILE` | Optional AppArmor profile name applied to runner containers |
-| `RUNNER_IMAGE_PYTHON` etc. | Override runner images (defaults to `code-interpreter-runner-*:latest`) |
+| `RUNNER_IMAGE_PYTHON` etc. | Override runner images (defaults to `code-executor-runner-*:latest`) |
 | `HOST_SANDBOX_DIR` | Host directory used by the Docker runner for `--mount src=...` (binds the same location as `SANDBOX_WORKDIR` inside the API container) |
 | `DISABLE_SANDBOX_SECURITY` | When set to `1`, omits seccomp/AppArmor and `no-new-privileges` flags (useful on Docker Desktop/macOS) |
 
