@@ -19,7 +19,7 @@ import { registerHealthRoutes } from './routes/health.js';
 import { registerFileRoutes } from './routes/files.js';
 import { registerRunRoutes } from './routes/runs.js';
 
-const logger = new Logger({ service: 'code-interpreter-api' });
+const logger = new Logger({ service: 'code-executor-api' });
 
 function parseApiKeys(): Record<string, { label: string; rateLimitRps: number; burst: number }> {
   const tokensEnv = process.env.API_KEYS ?? 'dev_123:default:5:10';
@@ -115,7 +115,7 @@ app.get('/openapi.json', (_req, res) => {
   const spec = {
     openapi: '3.1.0',
     info: {
-      title: 'Code Interpreter API',
+      title: 'Code Executor API',
       version: '0.1.0',
       description: 'Execute code in sandboxed environments'
     },

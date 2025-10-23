@@ -62,7 +62,7 @@ class MockSandbox implements SandboxRunner {
   }
 }
 
-describe('Code Interpreter API', () => {
+describe('Code Executor API', () => {
   const token = 'dev_123';
   let app: express.Express;
   let storage: ArtifactStorage;

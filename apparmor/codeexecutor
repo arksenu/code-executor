@@ -1,4 +1,4 @@
-profile codeinterpreter flags=(attach_disconnected,mediate_deleted) {
+profile codeexecutor flags=(attach_disconnected,mediate_deleted) {
   #include <abstractions/base>
   deny network,
   deny capability,
@@ -14,3 +14,4 @@ profile codeinterpreter flags=(attach_disconnected,mediate_deleted) {
   /dev/random r,
   /dev/urandom r,
 }
+

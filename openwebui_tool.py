@@ -1,16 +1,16 @@
 """
-Open-WebUI Tool: Code Interpreter
-==================================
+Open-WebUI Tool: Code Executor
+================================
 
 This tool enables code execution capabilities in Open-WebUI chat interfaces.
-It connects to the Code Interpreter API to run Python, Node.js, Ruby, PHP, and Go
+It connects to the Code Executor API to run Python, Node.js, Ruby, PHP, and Go
 code in secure Docker containers.
 
 SETUP INSTRUCTIONS:
-1. Ensure Code Interpreter API is running: docker compose --profile runners up -d
+1. Ensure Code Executor API is running: docker compose --profile runners up -d
 2. Copy this entire file content
 3. In Open-WebUI: Settings → Workspace → Tools → New Tool
-4. Paste the content and save with name "Code Interpreter"
+4. Paste the content and save with name "Code Executor"
 5. Enable the tool in your chat sessions
 
 IMPORTANT: If Open-WebUI is running in Docker, change the api_url below from
@@ -24,7 +24,7 @@ Functions available in chat:
 - run_go(code): Execute Go code
 - execute_code(code, language): Generic execution
 
-Author: Code Interpreter API Integration
+Author: Code Executor API Integration
 Version: 1.0.0
 """
 
@@ -38,7 +38,7 @@ class Tools:
     class Valves(BaseModel):
         api_url: str = Field(
             default="http://localhost:8080/v1/runs",
-            description="Code Interpreter API endpoint"
+            description="Code Executor API endpoint"
         )
         api_key: str = Field(
             default="dev_123",
@@ -109,7 +109,7 @@ class Tools:
         except requests.exceptions.Timeout:
             return f"⏱️ Code execution timed out ({self.valves.timeout} seconds limit)"
         except requests.exceptions.ConnectionError as e:
-            return f"❌ Could not connect to Code Interpreter API at {self.valves.api_url}\n\nIf Open-WebUI is running in Docker, use the Docker version of this tool or change api_url to 'http://host.docker.internal:8080/v1/runs'\n\nError: {str(e)}"
+            return f"❌ Could not connect to Code Executor API at {self.valves.api_url}\n\nIf Open-WebUI is running in Docker, use the Docker version of this tool or change api_url to 'http://host.docker.internal:8080/v1/runs'\n\nError: {str(e)}"
         except requests.exceptions.HTTPError as e:
             if e.response.status_code == 401:
                 return "🔐 Authentication failed. Check API key configuration."

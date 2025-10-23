@@ -165,3 +165,4 @@ func main() {
     expect(result.usage.wall_ms).toBeLessThanOrEqual(1100); // Allow small overhead
   });
 });
+

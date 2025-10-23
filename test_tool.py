@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-Code Interpreter API Test Script
-=================================
+Code Executor API Test Script
+==============================
 
-This is a standalone test script for the Code Interpreter API.
+This is a standalone test script for the Code Executor API.
 Use this to verify the API is working correctly without needing Open-WebUI.
 
 USAGE:
-1. Ensure the Code Interpreter API is running:
+1. Ensure the Code Executor API is running:
    docker compose --profile runners up -d
 
 2. Run this script:
@@ -40,7 +40,7 @@ API_URL = "http://localhost:8080/v1/runs"
 API_KEY = "dev_123"
 
 def execute_code(language, code):
-    """Execute code using the Code Interpreter API"""
+    """Execute code using the Code Executor API"""
     headers = {
         "Authorization": f"Bearer {API_KEY}",
         "Content-Type": "application/json"
@@ -69,7 +69,7 @@ def execute_code(language, code):
 
 if __name__ == "__main__":
     # Test examples
-    print("=== Testing Code Interpreter API ===\n")
+    print("=== Testing Code Executor API ===\n")
     
     # Test 1: Python
     print("Test 1: Python")

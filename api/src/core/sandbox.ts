@@ -7,11 +7,11 @@ import type { SandboxResult, SandboxRunSpec, SandboxRunner } from './types.js';
 import { Logger } from '../util/logger.js';
 
 const languageImageMap: Record<string, string> = {
-  python: process.env.RUNNER_IMAGE_PYTHON ?? 'code-interpreter-runner-python:latest',
-  node: process.env.RUNNER_IMAGE_NODE ?? 'code-interpreter-runner-node:latest',
-  ruby: process.env.RUNNER_IMAGE_RUBY ?? 'code-interpreter-runner-ruby:latest',
-  php: process.env.RUNNER_IMAGE_PHP ?? 'code-interpreter-runner-php:latest',
-  go: process.env.RUNNER_IMAGE_GO ?? 'code-interpreter-runner-go:latest'
+  python: process.env.RUNNER_IMAGE_PYTHON ?? 'code-executor-runner-python:latest',
+  node: process.env.RUNNER_IMAGE_NODE ?? 'code-executor-runner-node:latest',
+  ruby: process.env.RUNNER_IMAGE_RUBY ?? 'code-executor-runner-ruby:latest',
+  php: process.env.RUNNER_IMAGE_PHP ?? 'code-executor-runner-php:latest',
+  go: process.env.RUNNER_IMAGE_GO ?? 'code-executor-runner-go:latest'
 };
 
 export interface DockerRunnerOptions {

@@ -1,6 +1,6 @@
 # Open-WebUI Integration Guide
 
-This document explains how to integrate the Code Interpreter API with [Open-WebUI](https://github.com/open-webui/open-webui) to enable code execution capabilities within your AI chat interface.
+This document explains how to integrate the Code Executor API with [Open-WebUI](https://github.com/open-webui/open-webui) to enable code execution capabilities within your AI chat interface.
 
 ## Overview
 
@@ -24,7 +24,7 @@ The integration allows Open-WebUI to execute code in five languages (Python, Nod
 
 ## Setup Instructions
 
-### 1. Start the Code Interpreter API
+### 1. Start the Code Executor API
 
 ```bash
 # Using Make
@@ -62,7 +62,7 @@ The API URL depends on where Open-WebUI is running:
 |-------------------|---------|
 | Local browser (not Docker) | `http://localhost:8080/v1/runs` |
 | Docker container | `http://host.docker.internal:8080/v1/runs` |
-| Same Docker network | `http://code-interpreter-api:8080/v1/runs` |
+| Same Docker network | `http://code-executor-api:8080/v1/runs` |
 
 **Important**: If Open-WebUI is in Docker, you have two options:
 1. Use `openwebui_tool_docker.py` which has `host.docker.internal` pre-configured (recommended)
@@ -71,7 +71,7 @@ The API URL depends on where Open-WebUI is running:
 ## File Structure
 
 ```
-code-interpreter/
+code-executor/
 ├── api/                      # Main API implementation
 │   └── src/
 │       └── index.ts          # Enhanced with CORS, OpenAPI spec
@@ -110,7 +110,7 @@ python3 test_tool.py
 
 1. Start a new chat
 2. Look for the tools/functions selector (usually a 🧩 icon)
-3. Select "Code Interpreter" from available tools
+3. Select "Code Executor" from available tools
 4. The tool is now active for that chat session
 
 ### Example Prompts
@@ -198,7 +198,7 @@ Go programs require compilation before execution, which adds approximately 3-4 s
 
 ```bash
 # API logs
-docker logs code-interpreter-api-1 --tail 50
+docker logs code-executor-api-1 --tail 50
 
 # Open-WebUI logs (if in Docker)
 docker logs open-webui --tail 50
@@ -215,7 +215,7 @@ docker logs open-webui --tail 50
 
 ## Environment Variables
 
-### Code Interpreter API
+### Code Executor API
 
 | Variable | Default | Description |
 |----------|---------|-------------|
@@ -283,5 +283,5 @@ To contribute improvements:
 
 ## License
 
-This integration is part of the Code Interpreter API project.
+This integration is part of the Code Executor API project.
 
